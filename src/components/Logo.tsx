@@ -1,0 +1,38 @@
+
+
+interface LogoProps {
+  className?: string
+  showText?: boolean
+  textSizeClass?: string
+  iconSizeClass?: string
+}
+
+export default function Logo({ 
+  className = '', 
+  showText = true, 
+  textSizeClass = 'font-mono text-base font-semibold tracking-wider',
+  iconSizeClass = 'h-6 w-auto'
+}: LogoProps) {
+  return (
+    <div className={`flex items-center gap-2.5 group ${className}`}>
+      {/* Brand Icon SVG */}
+      <svg 
+        className={`${iconSizeClass} text-current group-hover:text-brand-green transition-colors duration-200`}
+        viewBox="0 0 32 48" 
+        fill="none" 
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <g fill="currentColor">
+          <path d="m18.6667 30.6667c7.3638 0 13.3333-5.9696 13.3333-13.3334 0-7.36376-5.9695-13.3333-13.3333-13.3333h-18.6667v26.6667z" opacity=".7"/>
+          <path d="m0 4 32 40h-21.3333l-10.6667-13.3333z" opacity=".7"/>
+          <path d="m21.1488 30.436c-.8042.1515-1.6339.2307-2.4821.2307h-18.6667v-26.6667z" opacity=".7"/>
+        </g>
+      </svg>
+      {showText && (
+        <span className={`text-current group-hover:text-brand-green transition-colors duration-200 ${textSizeClass}`}>
+          RescueLens
+        </span>
+      )}
+    </div>
+  )
+}

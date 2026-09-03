@@ -3,43 +3,79 @@ import { motion, AnimatePresence } from 'framer-motion'
 import type { Variants } from 'framer-motion'
 import { Link, useLocation } from 'react-router-dom'
 import { Eye, MapPin, Activity, Shield, ChevronRight, AlertTriangle, LifeBuoy, CheckCircle, X } from 'lucide-react'
+import Lenis from 'lenis'
+import 'lenis/dist/lenis.css'
+import { gsap } from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import ScrollStory from '../components/ScrollStory'
 import SEO from '../components/SEO'
 import WorkflowTimeline from '../components/WorkflowTimeline'
 import MagnetLines from '../components/MagnetLines'
 
-const INDIAN_LOCATIONS = [
-  'Kolkata, West Bengal',
+gsap.registerPlugin(ScrollTrigger)
+
+const NER_LOCATIONS = [
   'Mumbai, Maharashtra',
   'Delhi, NCR',
   'Bengaluru, Karnataka',
   'Chennai, Tamil Nadu',
+  'Kolkata, West Bengal',
   'Hyderabad, Telangana',
-  'Pune, Maharashtra',
   'Ahmedabad, Gujarat',
+  'Pune, Maharashtra',
   'Jaipur, Rajasthan',
   'Lucknow, Uttar Pradesh',
-  'Patna, Bihar',
-  'Kochi, Kerala',
-  'Bhubaneswar, Odisha',
-  'Guwahati, Assam',
-  'Chandigarh',
-  'Indore, Madhya Pradesh',
-  'Coimbatore, Tamil Nadu',
-  'Nagpur, Maharashtra',
-  'Visakhapatnam, Andhra Pradesh',
-  'Surat, Gujarat',
-  'Kanpur, Uttar Pradesh',
-  'Ranchi, Jharkhand',
-  'Thiruvananthapuram, Kerala',
   'Bhopal, Madhya Pradesh',
+  'Chandigarh, Punjab',
+  'Kochi, Kerala',
+  'Guwahati, Assam',
+  'Patna, Bihar',
+  'Bhubaneswar, Odisha',
   'Dehradun, Uttarakhand',
-  'Jammu, J&K',
-  'Srinagar, J&K'
+  'Thiruvananthapuram, Kerala',
+  'Visakhapatnam, Andhra Pradesh',
+  'Ranchi, Jharkhand',
+  'Shimla, Himachal Pradesh',
+  'Srinagar, J&K',
+  'Gangtok, Sikkim',
+  'Agartala, Tripura',
+  'Shillong, Meghalaya'
 ]
 
 export default function LandingPage() {
+  // Initialize Lenis Smooth Scrolling on Landing Page
+  useEffect(() => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (prefersReducedMotion) return
 
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      orientation: 'vertical',
+      gestureOrientation: 'vertical',
+      smoothWheel: true,
+      wheelMultiplier: 1,
+      touchMultiplier: 2,
+    })
+
+    // Synchronize Lenis scroll updates with GSAP ScrollTrigger
+    lenis.on('scroll', ScrollTrigger.update)
+
+    const updateTicker = (time: number) => {
+      lenis.raf(time * 1000)
+    }
+
+    gsap.ticker.add(updateTicker)
+    gsap.ticker.lagSmoothing(0)
+
+    ;(window as any).lenis = lenis
+
+    return () => {
+      gsap.ticker.remove(updateTicker)
+      lenis.destroy()
+      delete (window as any).lenis
+    }
+  }, [])
 
   // Public/Independent Intake Modal States
   const [showIntakeModal, setShowIntakeModal] = useState(false)
@@ -91,10 +127,10 @@ export default function LandingPage() {
       return
     }
 
-    // Filter local major locations first for instant feedback
-    const localMatches = INDIAN_LOCATIONS.filter(loc =>
+    // Filter local major NER locations first for instant feedback
+    const localMatches = NER_LOCATIONS.filter(loc =>
       loc.toLowerCase().includes(query.toLowerCase())
-    ).slice(0, 3)
+    ).slice(0, 4)
 
     if (type === 'report') setIncSuggestions(localMatches)
     else setHelpSuggestions(localMatches)
@@ -207,6 +243,18 @@ export default function LandingPage() {
     }
   }, [showIntakeModal, activeTab])
 
+  // Pause/resume Lenis smooth scrolling when intake modal opens/closes
+  useEffect(() => {
+    const lenisInstance = (window as any).lenis
+    if (lenisInstance) {
+      if (showIntakeModal) {
+        lenisInstance.stop()
+      } else {
+        lenisInstance.start()
+      }
+    }
+  }, [showIntakeModal])
+
   // Listen for the custom navbar dispatch event
   useEffect(() => {
     const handleSetTab = (e: Event) => {
@@ -258,8 +306,8 @@ export default function LandingPage() {
   return (
     <>
       <SEO 
-        title="RescueLens AI | AI-Powered Disaster Intelligence Platform" 
-        description="Analyze disaster imagery, identify affected regions, discover critical resources, and support emergency response teams with actionable AI-driven insights." 
+        title="WeatherGPT — Conversational AI for Weather Forecasting, Alerts & Climate Intelligence" 
+        description="Get real-time forecasts, severity-based alerts, and climate intelligence through one conversational interface — powered by IMD, INSAT, GFS, and ECMWF data." 
       />
 
       <div className="relative w-full overflow-hidden">
@@ -285,8 +333,8 @@ export default function LandingPage() {
               <div className="p-3 rounded-full bg-brand-green/10 border border-brand-green/20 text-brand-green animate-pulse">
                 <Eye className="w-8 h-8" />
               </div>
-              <span className="text-xl font-bold tracking-wide text-white">Damage Analysis</span>
-              <span className="text-sm text-muted-dark leading-normal max-w-[200px]">Rapid computer vision scans</span>
+              <span className="text-xl font-bold tracking-wide text-white">Real-Time Forecasts</span>
+              <span className="text-sm text-muted-dark leading-normal max-w-[200px]">Instant weather predictions for any location</span>
             </motion.div>
 
             <motion.div 
@@ -299,8 +347,8 @@ export default function LandingPage() {
               <div className="p-3 rounded-full bg-brand-green/10 border border-brand-green/20 text-brand-green animate-pulse">
                 <MapPin className="w-8 h-8" />
               </div>
-              <span className="text-xl font-bold tracking-wide text-white">Asset Mapping</span>
-              <span className="text-sm text-muted-dark leading-normal max-w-[200px]">Shelters, hospitals &amp; water</span>
+              <span className="text-xl font-bold tracking-wide text-white">Smart Alerts</span>
+              <span className="text-sm text-muted-dark leading-normal max-w-[200px]">Severity-based weather warnings</span>
             </motion.div>
 
             <motion.div 
@@ -313,8 +361,8 @@ export default function LandingPage() {
               <div className="p-3 rounded-full bg-brand-green/10 border border-brand-green/20 text-brand-green animate-pulse">
                 <Activity className="w-8 h-8" />
               </div>
-              <span className="text-xl font-bold tracking-wide text-white">Central Console</span>
-              <span className="text-sm text-muted-dark leading-normal max-w-[200px]">Unified tactical view</span>
+              <span className="text-xl font-bold tracking-wide text-white">Climate Analytics</span>
+              <span className="text-sm text-muted-dark leading-normal max-w-[200px]">Historical trends & rainfall analysis</span>
             </motion.div>
 
             <motion.div 
@@ -327,8 +375,8 @@ export default function LandingPage() {
               <div className="p-3 rounded-full bg-brand-green/10 border border-brand-green/20 text-brand-green animate-pulse">
                 <Shield className="w-8 h-8" />
               </div>
-              <span className="text-xl font-bold tracking-wide text-white">Response Speed</span>
-              <span className="text-sm text-muted-dark leading-normal max-w-[200px]">Sub-second decision sync</span>
+              <span className="text-xl font-bold tracking-wide text-white">Conversational AI</span>
+              <span className="text-sm text-muted-dark leading-normal max-w-[200px]">Natural-language weather queries</span>
             </motion.div>
           </motion.div>
         </section>
@@ -347,10 +395,10 @@ export default function LandingPage() {
                 Core Capabilities
               </h2>
               <p className="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                Precision tools for critical incidents
+                Conversational weather intelligence for India
               </p>
               <p className="mt-4 text-base text-muted-dark">
-                Empowering field responders and tactical commanders with immediate, verified situational intelligence.
+                Empowering citizens, farmers, disaster management authorities, and rural communities with real-time weather forecasts, alerts, and climate analytics.
               </p>
             </motion.div>
 
@@ -371,10 +419,10 @@ export default function LandingPage() {
                   <Eye className="w-5 h-5" />
                 </div>
                 <h3 className="text-lg font-semibold text-white group-hover:text-brand-green transition-colors duration-200">
-                  AI Damage Assessment
+                  Real-Time Forecasting
                 </h3>
                 <p className="text-sm text-muted-dark leading-relaxed">
-                  Quickly analyze disaster imagery and identify affected zones using advanced computer vision.
+                  Hyper-local weather predictions powered by IMD stations, INSAT satellite imagery, and GFS/ECMWF numerical models.
                 </p>
               </motion.div>
 
@@ -388,10 +436,10 @@ export default function LandingPage() {
                   <MapPin className="w-5 h-5" />
                 </div>
                 <h3 className="text-lg font-semibold text-white group-hover:text-brand-green transition-colors duration-200">
-                  Resource Discovery
+                  Severity-Based Alerts
                 </h3>
                 <p className="text-sm text-muted-dark leading-relaxed">
-                  Locate hospitals, shelters, food, water, and emergency infrastructure when every minute matters.
+                  Automated weather warnings classified by IMD severity thresholds — from cyclones and floods to heatwaves and cold waves.
                 </p>
               </motion.div>
 
@@ -405,10 +453,10 @@ export default function LandingPage() {
                   <Activity className="w-5 h-5" />
                 </div>
                 <h3 className="text-lg font-semibold text-white group-hover:text-brand-green transition-colors duration-200">
-                  Situational Awareness
+                  Agro-Climate Advisories
                 </h3>
                 <p className="text-sm text-muted-dark leading-relaxed">
-                  Provide responders and decision-makers with a centralized operational view.
+                  Crop-specific sowing, irrigation, and harvest guidance for farmers based on monsoon patterns and soil moisture analysis.
                 </p>
               </motion.div>
 
@@ -422,10 +470,10 @@ export default function LandingPage() {
                   <Shield className="w-5 h-5" />
                 </div>
                 <h3 className="text-lg font-semibold text-white group-hover:text-brand-green transition-colors duration-200">
-                  Emergency Intelligence
+                  Disaster Early Warning
                 </h3>
                 <p className="text-sm text-muted-dark leading-relaxed">
-                  Transform scattered information into actionable insights for faster response planning.
+                  Proactive alerts for floods, landslides, and extreme weather events with automated dispatch to district disaster management authorities.
                 </p>
               </motion.div>
             </motion.div>
@@ -475,12 +523,12 @@ export default function LandingPage() {
 
                 <div className="mb-6">
                   <h2 className="text-2xl font-bold tracking-tight text-white mb-2">
-                    {activeTab === 'report' ? 'Submit Public Report' : 'Get Help'}
+                    {activeTab === 'report' ? 'Report Weather Event' : 'Ask a Weather Question'}
                   </h2>
                   <p className="text-sm text-white/50 max-w-sm mx-auto leading-relaxed">
                     {activeTab === 'report' 
-                      ? 'Transmit incident logs directly to local response networks.' 
-                      : 'Request emergency assistance or supplies near your current location.'}
+                      ? 'Report a severe weather event, unusual conditions, or hazardous weather in your area.' 
+                      : 'Ask any weather, climate, or forecast question and get an AI-powered response.'}
                   </p>
                 </div>
 
@@ -500,7 +548,7 @@ export default function LandingPage() {
                       }`}
                     >
                       <AlertTriangle className="w-3.5 h-3.5" />
-                      Report Incident
+                      Report Event
                     </button>
                     <button
                       onClick={() => {
@@ -515,7 +563,7 @@ export default function LandingPage() {
                       }`}
                     >
                       <LifeBuoy className="w-3.5 h-3.5" />
-                      Get Help
+                      Ask Weather
                     </button>
                   </div>
                 </div>
@@ -551,9 +599,9 @@ export default function LandingPage() {
                         className="text-center py-6 flex flex-col items-center"
                       >
                         <CheckCircle className="w-12 h-12 text-red-400 mb-4" />
-                        <h3 className="text-xl font-bold text-white mb-2">Report Transmitted</h3>
+                        <h3 className="text-xl font-bold text-white mb-2">Event Reported</h3>
                         <p className="text-sm text-white/50 max-w-sm leading-relaxed mb-6">
-                          Your incident report has been registered. Our public network will dispatch coordinate updates to emergency responders.
+                          Your weather event report has been logged into WeatherGPT. Alert classification and affected region analysis have been initiated.
                         </p>
                         <button
                           onClick={() => {
@@ -564,7 +612,7 @@ export default function LandingPage() {
                           }}
                           className="text-xs font-mono font-bold tracking-wider text-red-400 uppercase hover:underline cursor-pointer"
                         >
-                          Submit Another Report
+                          Report Another Event
                         </button>
                       </motion.div>
                     ) : (
@@ -578,13 +626,13 @@ export default function LandingPage() {
                         className="flex flex-col gap-4"
                       >
                         <div className="flex flex-col gap-1.5">
-                          <label className="text-[10px] font-mono tracking-wider text-white/40 uppercase">Incident Title</label>
+                          <label className="text-[10px] font-mono tracking-wider text-white/40 uppercase">Event Type / Weather Hazard</label>
                           <input
                             type="text"
                             required
                             value={incTitle}
                             onChange={(e) => setIncTitle(e.target.value)}
-                            placeholder="e.g. Flash Flood in Sector 4"
+                            placeholder="e.g. Heavy rainfall flooding in Patna, Bihar"
                             className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/20 focus:border-red-500/50 focus:ring-0 focus:outline-none transition-colors duration-200"
                           />
                         </div>
@@ -592,7 +640,7 @@ export default function LandingPage() {
                           className="flex flex-col gap-1.5"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <label className="text-[10px] font-mono tracking-wider text-white/40 uppercase">Location / Coordinates</label>
+                          <label className="text-[10px] font-mono tracking-wider text-white/40 uppercase">Location / Region</label>
                           <div className="relative flex items-center">
                             <input
                               type="text"
@@ -603,7 +651,7 @@ export default function LandingPage() {
                                 setIncLoc(e.target.value)
                                 setShowIncDropdown(true)
                               }}
-                              placeholder="Type address (e.g. Kolkata) or coordinates"
+                              placeholder="e.g. Mumbai, Maharashtra or 28.6139, 77.2090"
                               className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl pl-4 pr-10 py-2.5 text-sm text-white placeholder-white/20 focus:border-red-500/50 focus:ring-0 focus:outline-none transition-colors duration-200"
                             />
                             <button
@@ -623,7 +671,7 @@ export default function LandingPage() {
                               )}
                             </button>
 
-                            {showIncDropdown && incSuggestions.length > 0 && (
+                            {showIncDropdown && incSuggestions.length > 0 ? (
                               <div className="absolute top-full left-0 right-0 z-30 mt-1 max-h-48 overflow-y-auto rounded-xl border border-hairline-dark bg-canvas-dark shadow-2xl">
                                 {incSuggestions.map((sug, idx) => (
                                   <button
@@ -639,7 +687,7 @@ export default function LandingPage() {
                                   </button>
                                 ))}
                               </div>
-                            )}
+                            ) : null}
                           </div>
                           
                           <button
@@ -651,12 +699,12 @@ export default function LandingPage() {
                           </button>
                         </div>
                         <div className="flex flex-col gap-1.5">
-                          <label className="text-[10px] font-mono tracking-wider text-white/40 uppercase">Description &amp; Needs</label>
+                          <label className="text-[10px] font-mono tracking-wider text-white/40 uppercase">Event Details & Observations</label>
                           <textarea
                             required
                             value={incDesc}
                             onChange={(e) => setIncDesc(e.target.value)}
-                            placeholder="Provide details on scope, damage, or stranded persons..."
+                            placeholder="Describe the weather event, severity, duration, and any damage observed..."
                             rows={3}
                             className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/20 focus:border-red-500/50 focus:ring-0 focus:outline-none transition-colors duration-200 resize-none"
                           />
@@ -665,7 +713,7 @@ export default function LandingPage() {
                           type="submit"
                           className="mt-2 w-full text-sm font-semibold text-white bg-red-500 hover:bg-red-600 py-3 rounded-xl shadow-lg shadow-red-500/10 transition-all duration-150 ease-out hover:scale-[1.02] active:scale-[0.98] font-mono tracking-tight cursor-pointer"
                         >
-                          Transmit Incident Report
+                          Submit Weather Event Report
                         </button>
                       </form>
                     )
@@ -677,9 +725,9 @@ export default function LandingPage() {
                         className="text-center py-6 flex flex-col items-center"
                       >
                         <CheckCircle className="w-12 h-12 text-brand-green mb-4" />
-                        <h3 className="text-xl font-bold text-white mb-2">Request Registered</h3>
+                        <h3 className="text-xl font-bold text-white mb-2">Question Submitted</h3>
                         <p className="text-sm text-white/50 max-w-sm leading-relaxed mb-6">
-                          Your request for assistance has been registered. Public tracking channels will share details with local coordinators.
+                          Your weather query has been submitted to WeatherGPT. Our AI is processing your request and will generate a response shortly.
                         </p>
                         <button
                           onClick={() => {
@@ -690,7 +738,7 @@ export default function LandingPage() {
                           }}
                           className="text-xs font-mono font-bold tracking-wider text-brand-green uppercase hover:underline cursor-pointer"
                         >
-                          File Another Request
+                          Submit Another Request
                         </button>
                       </motion.div>
                     ) : (
@@ -704,13 +752,13 @@ export default function LandingPage() {
                         className="flex flex-col gap-4"
                       >
                         <div className="flex flex-col gap-1.5">
-                          <label className="text-[10px] font-mono tracking-wider text-white/40 uppercase">Contact Information</label>
+                          <label className="text-[10px] font-mono tracking-wider text-white/40 uppercase">Your Name / Organization</label>
                           <input
                             type="text"
                             required
                             value={helpName}
                             onChange={(e) => setHelpName(e.target.value)}
-                            placeholder="Your Name, Phone or Email"
+                            placeholder="Your name, organization, or department"
                             className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/20 focus:border-brand-green/50 focus:ring-0 focus:outline-none transition-colors duration-200"
                           />
                         </div>
@@ -718,7 +766,7 @@ export default function LandingPage() {
                           className="flex flex-col gap-1.5"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <label className="text-[10px] font-mono tracking-wider text-white/40 uppercase">Location Designation</label>
+                          <label className="text-[10px] font-mono tracking-wider text-white/40 uppercase">Location of Interest</label>
                           <div className="relative flex items-center">
                             <input
                               type="text"
@@ -729,7 +777,7 @@ export default function LandingPage() {
                                 setHelpLoc(e.target.value)
                                 setShowHelpDropdown(true)
                               }}
-                              placeholder="Type address (e.g. Kolkata) or coordinates"
+                              placeholder="e.g. Delhi, Mumbai, or coordinates"
                               className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl pl-4 pr-10 py-2.5 text-sm text-white placeholder-white/20 focus:border-brand-green/50 focus:ring-0 focus:outline-none transition-colors duration-200"
                             />
                             <button
@@ -749,7 +797,7 @@ export default function LandingPage() {
                               )}
                             </button>
                             
-                            {showHelpDropdown && helpSuggestions.length > 0 && (
+                            {showHelpDropdown && helpSuggestions.length > 0 ? (
                               <div className="absolute top-full left-0 right-0 z-30 mt-1 max-h-48 overflow-y-auto rounded-xl border border-hairline-dark bg-canvas-dark shadow-2xl">
                                 {helpSuggestions.map((sug, idx) => (
                                   <button
@@ -765,7 +813,7 @@ export default function LandingPage() {
                                   </button>
                                 ))}
                               </div>
-                            )}
+                            ) : null}
                           </div>
                           
                           <button
@@ -777,12 +825,12 @@ export default function LandingPage() {
                           </button>
                         </div>
                         <div className="flex flex-col gap-1.5">
-                          <label className="text-[10px] font-mono tracking-wider text-white/40 uppercase">Needs Details</label>
+                          <label className="text-[10px] font-mono tracking-wider text-white/40 uppercase">Your Weather Question</label>
                           <textarea
                             required
                             value={helpDesc}
                             onChange={(e) => setHelpDesc(e.target.value)}
-                            placeholder="Detail specific needs (e.g. medical items, shelter, food & water)..."
+                            placeholder="e.g. What is the rainfall forecast for next week in Pune? Will there be a cyclone warning for the east coast?"
                             rows={3}
                             className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/20 focus:border-brand-green/50 focus:ring-0 focus:outline-none transition-colors duration-200 resize-none"
                           />
@@ -791,7 +839,7 @@ export default function LandingPage() {
                           type="submit"
                           className="mt-2 w-full text-sm font-semibold text-canvas-dark bg-brand-green hover:bg-brand-green-dark py-3 rounded-xl shadow-lg shadow-brand-green/10 transition-all duration-150 ease-out hover:scale-[1.02] active:scale-[0.98] font-mono tracking-tight cursor-pointer"
                         >
-                          Submit Help Request
+                          Submit Weather Question
                         </button>
                       </form>
                     )
@@ -827,17 +875,17 @@ export default function LandingPage() {
             className="max-w-5xl w-full mx-auto text-center relative z-10 px-4"
           >
             <h2 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl m-0 leading-tight">
-              Transform Emergency Response with AI
+              Weather intelligence, one conversation away
             </h2>
             <p className="mt-6 text-lg md:text-xl text-muted-dark max-w-2xl mx-auto leading-relaxed">
-              Empower responders with faster assessments, improved situational awareness, and actionable disaster intelligence.
+              Empower communities, farmers, and disaster authorities with real-time weather forecasts, severity alerts, and climate analytics — through natural conversation.
             </p>
             <div className="mt-10 flex items-center justify-center">
               <Link
-                to="/login"
+                to="/dashboard"
                 className="text-base font-semibold text-canvas-dark bg-brand-green hover:bg-brand-green-dark px-10 py-4.5 rounded-full transition-all duration-150 ease-out hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-brand-green/10 flex items-center gap-2 group"
               >
-                Get Started
+                Open WeatherGPT
                 <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
               </Link>
             </div>

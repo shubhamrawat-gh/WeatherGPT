@@ -51,8 +51,8 @@ export default function ResetPasswordPage() {
   return (
     <>
       <SEO 
-        title="Reset Password | RescueLens AI Console" 
-        description="Set a new password for your RescueLens AI account." 
+        title="Reset Password | WeatherGPT Console" 
+        description="Set a new password for your WeatherGPT account." 
       />
 
       <AuthLayout>

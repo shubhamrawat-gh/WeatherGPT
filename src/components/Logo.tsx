@@ -10,29 +10,52 @@ interface LogoProps {
 export default function Logo({ 
   className = '', 
   showText = true, 
-  textSizeClass = 'font-mono text-base font-semibold tracking-wider',
-  iconSizeClass = 'h-6 w-auto'
+  textSizeClass = 'font-mono text-base font-bold tracking-wider',
+  iconSizeClass = 'h-7 w-auto'
 }: LogoProps) {
   return (
     <div className={`flex items-center gap-2.5 group ${className}`}>
-      {/* Brand Icon SVG */}
+      {/* WeatherGPT Network Glyph */}
       <svg 
         className={`${iconSizeClass} text-current group-hover:text-brand-green transition-colors duration-200`}
-        viewBox="0 0 32 48" 
+        viewBox="0 0 40 40" 
         fill="none" 
         xmlns="http://www.w3.org/2000/svg"
       >
-        <g fill="currentColor">
-          <path d="m18.6667 30.6667c7.3638 0 13.3333-5.9696 13.3333-13.3334 0-7.36376-5.9695-13.3333-13.3333-13.3333h-18.6667v26.6667z" opacity=".7"/>
-          <path d="m0 4 32 40h-21.3333l-10.6667-13.3333z" opacity=".7"/>
-          <path d="m21.1488 30.436c-.8042.1515-1.6339.2307-2.4821.2307h-18.6667v-26.6667z" opacity=".7"/>
-        </g>
+        {/* Hexagonal / Weather intelligence hub shape */}
+        <polygon 
+          points="20,4 34,12 34,28 20,36 6,28 6,12" 
+          stroke="currentColor" 
+          strokeWidth="2" 
+          strokeLinejoin="round" 
+          className="text-brand-green/40 group-hover:text-brand-green transition-colors duration-200" 
+          fill="none"
+        />
+        {/* Interconnected data source pathways */}
+        <path 
+          d="M20 4 L20 20 M20 20 L34 28 M20 20 L6 28 M6 12 L20 20 M34 12 L20 20" 
+          stroke="currentColor" 
+          strokeWidth="1.5" 
+          strokeLinecap="round" 
+          className="text-white/60 group-hover:text-white transition-colors duration-200"
+        />
+        {/* Central AI node */}
+        <circle cx="20" cy="20" r="3.5" fill="#00ed64" />
+        <circle cx="20" cy="4" r="2" fill="currentColor" opacity="0.8" />
+        <circle cx="34" cy="12" r="2" fill="currentColor" opacity="0.8" />
+        <circle cx="34" cy="28" r="2" fill="currentColor" opacity="0.8" />
+        <circle cx="20" cy="36" r="2" fill="currentColor" opacity="0.8" />
+        <circle cx="6" cy="28" r="2" fill="currentColor" opacity="0.8" />
+        <circle cx="6" cy="12" r="2" fill="currentColor" opacity="0.8" />
       </svg>
-      {showText && (
-        <span className={`text-current group-hover:text-brand-green transition-colors duration-200 ${textSizeClass}`}>
-          RescueLens
-        </span>
-      )}
+      {showText ? (
+        <div className="flex flex-col text-left">
+          <span className={`text-current group-hover:text-brand-green transition-colors duration-200 ${textSizeClass}`}>
+            WEATHER<span className="text-brand-green font-black">GPT</span>
+          </span>
+        </div>
+      ) : null}
     </div>
   )
 }
+

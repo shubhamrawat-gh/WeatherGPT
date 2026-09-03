@@ -1,95 +1,60 @@
 import { useState, useEffect, Suspense } from 'react'
-import { Outlet, useLocation } from 'react-router-dom'
+import { Outlet } from 'react-router-dom'
 import DashboardSidebar from './DashboardSidebar'
 import DashboardTopbar from './DashboardTopbar'
 import MobileDrawer from './MobileDrawer'
-import ClickSpark from '../ClickSpark'
+import { useTheme } from '../../context/ThemeContext'
 
 export default function DashboardLayout() {
-  const location = useLocation()
+  const { isDark, toggleTheme } = useTheme()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
     return localStorage.getItem('sidebar-collapsed') === 'true'
   })
-  const [isDark, setIsDark] = useState(() => {
-    // Default to dark theme as RescueLens is an operations console
-    return localStorage.getItem('theme') !== 'light'
-  })
-
-  // Theme Sync effect
-  useEffect(() => {
-    const root = document.documentElement
-    if (isDark) {
-      root.classList.add('dark')
-      localStorage.setItem('theme', 'dark')
-    } else {
-      root.classList.remove('dark')
-      localStorage.setItem('theme', 'light')
-    }
-  }, [isDark])
 
   // Sidebar Collapse sync
   useEffect(() => {
     localStorage.setItem('sidebar-collapsed', String(isSidebarCollapsed))
   }, [isSidebarCollapsed])
 
-  const handleMenuToggle = () => {
-    setSidebarOpen((prev) => !prev)
-  }
-
-  const handleSidebarClose = () => {
-    setSidebarOpen(false)
-  }
-
-  const isDashboardHome = location.pathname === '/dashboard' || location.pathname === '/dashboard/'
-
   return (
-    <ClickSpark
-      sparkColor="#00ed64"
-      sparkSize={10}
-      sparkRadius={20}
-      sparkCount={10}
-      duration={400}
-    >
-      <div className="flex h-screen w-full flex-col bg-slate-50 dark:bg-canvas-dark text-slate-800 dark:text-white overflow-hidden transition-colors duration-300">
-        {/* Top Navigation Bar - full viewport width */}
-        {!isDashboardHome && (
-          <DashboardTopbar 
-            onMenuToggle={handleMenuToggle} 
-            isDark={isDark} 
-            onThemeToggle={() => setIsDark(!isDark)} 
-          />
-        )}
+    <div className="flex h-screen w-full bg-[#00141e] text-[#f0f4f8] overflow-hidden font-sans">
+      {/* Navigation Sidebar (Desktop Full Height) */}
+      <DashboardSidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        isCollapsed={isSidebarCollapsed}
+        onCollapseToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+      />
 
-        {/* Main Body Section below the Header */}
-        <div className="flex flex-row flex-grow w-full overflow-hidden relative">
-          
-          {/* Navigation Sidebar (Desktop-only, collapsible) */}
-          <DashboardSidebar 
-            isOpen={sidebarOpen} 
-            onClose={handleSidebarClose} 
-            isCollapsed={isSidebarCollapsed}
-            onCollapseToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)} 
-          />
+      {/* Mobile Drawer */}
+      <MobileDrawer
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
 
-          {/* Mobile Drawer (Slides out when toggled) */}
-          <MobileDrawer 
-            isOpen={sidebarOpen} 
-            onClose={handleSidebarClose} 
-          />
+      {/* Main Right Content Section */}
+      <div className="flex flex-col flex-1 h-full overflow-hidden bg-[#00141e]">
+        {/* Minimal Dashboard Topbar */}
+        <DashboardTopbar
+          onMenuToggle={() => setSidebarOpen(true)}
+          isDark={isDark}
+          onThemeToggle={toggleTheme}
+        />
 
-          {/* Dashboard Content Container */}
-          <main className="flex-grow overflow-y-auto bg-slate-50 dark:bg-canvas-dark flex flex-col transition-colors duration-300">
-            <Suspense fallback={
-              <div className="flex-grow flex items-center justify-center bg-slate-50 dark:bg-canvas-dark h-full w-full transition-colors duration-300">
-                <div className="w-6 h-6 border-2 border-brand-green border-t-transparent rounded-full animate-spin" role="status" aria-label="Loading" />
+        {/* Main Content Area */}
+        <main className="flex-1 overflow-hidden bg-[#00141e] flex flex-col relative">
+          <Suspense
+            fallback={
+              <div className="flex-1 flex items-center justify-center h-full w-full">
+                <div className="w-5 h-5 border-2 border-brand-green border-t-transparent rounded-full animate-spin" role="status" aria-label="Loading" />
               </div>
-            }>
-              <Outlet />
-            </Suspense>
-          </main>
-        </div>
+            }
+          >
+            <Outlet />
+          </Suspense>
+        </main>
       </div>
-    </ClickSpark>
+    </div>
   )
 }

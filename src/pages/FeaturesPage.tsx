@@ -14,13 +14,13 @@ export default function FeaturesPage() {
         features: [
           {
             type: 'Feature',
-            geometry: { type: 'Point', coordinates: [79.0686, 30.0668] },
-            properties: { title: 'Wildfire - Uttarakhand' }
+            geometry: { type: 'Point', coordinates: [91.8933, 25.5788] },
+            properties: { title: 'Landslide Warning - NH-6 Shillong' }
           },
           {
             type: 'Feature',
-            geometry: { type: 'Point', coordinates: [70.8123, 23.0225] },
-            properties: { title: 'Seismic Incident - Gujarat' }
+            geometry: { type: 'Point', coordinates: [94.1086, 25.6751] },
+            properties: { title: 'Choke Point - NH-29 Kohima' }
           }
         ]
       })
@@ -33,13 +33,13 @@ export default function FeaturesPage() {
         features: [
           {
             type: 'Feature',
-            geometry: { type: 'Point', coordinates: [77.2090, 28.6139] },
-            properties: { title: 'Delhi Command Center' }
+            geometry: { type: 'Point', coordinates: [91.7362, 26.1445] },
+            properties: { title: 'Guwahati Multi-Modal Hub' }
           },
           {
             type: 'Feature',
-            geometry: { type: 'Point', coordinates: [72.8777, 19.0760] },
-            properties: { title: 'Mumbai Relief Base' }
+            geometry: { type: 'Point', coordinates: [88.4352, 26.7271] },
+            properties: { title: 'Siliguri Staging Terminal' }
           }
         ]
       })
@@ -71,74 +71,74 @@ export default function FeaturesPage() {
   const features = [
     {
       icon: <Flame className="w-6 h-6 text-orange-500" />,
-      title: "Real-Time Wildfire Monitoring",
-      description: "Track active fire events using NASA FIRMS satellite data with live updates and geographic visualization. Detect thermal anomalies and outline fire boundaries instantly.",
-      badge: "NASA FIRMS"
+      title: "Real-Time Weather Forecasting",
+      description: "Get hyper-local forecasts for temperature, precipitation, wind, and humidity across any district or city in India with multi-model AI ensemble precision.",
+      badge: "Forecast Engine"
     },
     {
       icon: <Activity className="w-6 h-6 text-emerald-400" />,
-      title: "Earthquake Detection",
-      description: "Receive instant earthquake information from trusted USGS data sources with magnitude, depth, and location insights. Visualize shake intensities on dynamic map layers.",
-      badge: "USGS Feed"
+      title: "Precipitation & Doppler Radar",
+      description: "Receive instant rainfall telemetry and cloud movement insights from IMD Doppler radar feeds and INSAT satellite scans. Anticipate inundation in vulnerable zones.",
+      badge: "IMD Weather"
     },
     {
       icon: <Brain className="w-6 h-6 text-indigo-400" />,
-      title: "AI Situation Analysis",
-      description: "Gemini AI transforms raw disaster data into actionable summaries and response recommendations, helping disaster coordinators triage critical decisions under pressure.",
-      badge: "Gemini Pro"
+      title: "Conversational AI Interface",
+      description: "Ask complex weather and climate questions in natural language. Get contextual explanations, interactive forecast charts, and actionable preparedness guidance.",
+      badge: "NLP Engine"
     },
     {
       icon: <Map className="w-6 h-6 text-sky-400" />,
-      title: "Interactive Disaster Maps",
-      description: "Visualize incidents through Mapbox-powered maps with advanced filtering, terrain mapping, location intelligence, and real-time buffer analysis.",
-      badge: "Mapbox SDK"
+      title: "Interactive Live Weather GIS",
+      description: "Visualize live radar layers, cloud coverage, cyclone tracks, rainfall intensity heatmaps, and active severe weather alert zones across India.",
+      badge: "MapLibre GL"
     },
     {
       icon: <ShieldCheck className="w-6 h-6 text-[#00ed64]" />,
-      title: "Smart Risk Assessment",
-      description: "Identify high-risk regions and monitor developing threats before they escalate. Model disaster paths based on local topography, weather, and fuel factors.",
-      badge: "Predictive"
+      title: "Agro-Climate Advisory System",
+      description: "Deliver tailored crop guidance including optimal sowing windows, soil moisture assessments, irrigation planning, and harvest weather advisories.",
+      badge: "Agri Advisory"
     },
     {
       icon: <Bell className="w-6 h-6 text-red-400" />,
-      title: "Instant Alerts",
-      description: "Stay informed with real-time notifications and critical event updates. Deliver automated broadcasts to response personnel and community networks.",
-      badge: "Failsafe Sync"
+      title: "Disaster Early Warning & Alerts",
+      description: "Deliver instant severity-classified weather bulletins to disaster management authorities, emergency response teams, and public channels.",
+      badge: "Alert Dispatch"
     }
   ]
 
   const benefits = [
     {
-      title: "Faster disaster awareness",
-      desc: "Live API integrations feed satellite thermal spots and seismic waves directly into the UI, bypassing traditional latency blocks."
+      title: "Hyper-Local Forecast Accuracy",
+      desc: "Access high-resolution predictions powered by multi-model ensembles combining GFS, ECMWF, and IMD numerical models."
     },
     {
-      title: "Data-driven decision making",
-      desc: "Rely on verified ground truth data directly from NASA space sensors and USGS seismograph networks."
+      title: "Conversational Natural Language",
+      desc: "Query weather patterns, monsoon timelines, and climate statistics naturally without interpreting complex meteorological charts."
     },
     {
-      title: "Reduced response times",
-      desc: "Pre-compiled AI briefings and clear geographic overlays allow emergency teams to plan dispatch routes in seconds rather than hours."
+      title: "Severity-Based Early Warnings",
+      desc: "Automated alert classification warns communities well ahead of cyclones, cloudbursts, heatwaves, and flash floods."
     },
     {
-      title: "Centralized monitoring platform",
-      desc: "Monitor fires, earthquakes, storms, and responders together in one unified situation dashboard, eliminating tab fatigue."
+      title: "Agro-Climate Decision Support",
+      desc: "Help farmers safeguard crops with timely sowing windows, frost alerts, and precipitation outlooks."
     },
     {
-      title: "Trusted global data sources",
-      desc: "Infrastructure designed to run 24/7 on direct feeds from NASA, USGS, Mapbox, and local emergency alerts."
+      title: "Verified Multi-Agency Data Feeds",
+      desc: "Seamless integration with IMD observation stations, INSAT satellites, WIS 2.0 exchange, and global NWP models."
     },
     {
-      title: "AI-generated operational insights",
-      desc: "Gemini models ingest raw coordinates and metrics to output clean markdown situation reports and contingency plans."
+      title: "AI-Generated Briefings & Summaries",
+      desc: "Automated weather summaries, emergency bulletins, and regional trend briefings generated in seconds."
     }
   ]
 
   return (
     <>
       <SEO 
-        title="RescueLens AI | Features & Core Capabilities" 
-        description="RescueLens AI combines real-time NASA satellite data, USGS seismic monitoring, Mapbox visualization, and Gemini AI insights to speed up emergency response." 
+        title="WeatherGPT | Features & Core Capabilities" 
+        description="WeatherGPT combines real-time weather observations, IMD radar feeds, satellite data, and conversational AI to deliver proactive weather intelligence." 
       />
 
       <div className="w-full bg-[#001e2b] text-white selection:bg-[#00ed64]/35 selection:text-[#001e2b] pb-24">
@@ -156,9 +156,9 @@ export default function FeaturesPage() {
               transition={{ duration: 0.6, delay: 0.1 }}
               className="text-4xl md:text-7xl font-medium tracking-tight md:tracking-[-1.5px] leading-tight md:leading-[1.10] text-white max-w-4xl mx-auto"
             >
-              Advanced Disaster Intelligence for{" "}
+              Conversational Weather Intelligence for{" "}
               <span className="text-[#00ed64]">
-                Faster Response
+                India
               </span>
             </motion.h1>
 
@@ -168,7 +168,7 @@ export default function FeaturesPage() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="mt-6 text-lg font-normal text-[#a8b3bc] leading-[1.50] max-w-3xl mx-auto"
             >
-              RescueLens AI combines real-time satellite data, seismic monitoring, interactive mapping, and AI-powered analysis to help organizations detect, understand, and respond to emergencies faster.
+              WeatherGPT combines real-time observation networks, IMD precipitation monitoring, satellite imagery, and conversational AI to deliver instant forecasts, severity alerts, and climate intelligence.
             </motion.p>
 
             <motion.div
@@ -178,16 +178,16 @@ export default function FeaturesPage() {
               className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
             >
               <Link
-                to="/login"
+                to="/dashboard"
                 className="w-full sm:w-auto px-[22px] py-[10px] rounded-full text-sm font-semibold bg-[#00ed64] text-[#001e2b] hover:bg-[#00b545] transition-colors cursor-pointer text-center"
               >
-                Get Started
+                Open WeatherGPT
               </Link>
               <Link
                 to="/dashboard"
                 className="w-full sm:w-auto px-[22px] py-[10px] rounded-full text-sm font-semibold border border-[#1c2d38] bg-transparent text-white hover:bg-white/5 transition-colors cursor-pointer text-center"
               >
-                View Dashboard
+                View Live Map
               </Link>
             </motion.div>
           </div>
@@ -206,7 +206,7 @@ export default function FeaturesPage() {
                   <div className="w-3 h-3 rounded-full bg-red-500/70" />
                   <div className="w-3 h-3 rounded-full bg-yellow-500/70" />
                   <div className="w-3 h-3 rounded-full bg-green-500/70" />
-                  <span className="text-xs text-[#a8b3bc] font-mono ml-2">rescuelens-console // main_map_layer</span>
+                  <span className="text-xs text-[#a8b3bc] font-mono ml-2">weathergpt-console // weather_intelligence</span>
                 </div>
                 <div className="px-3 py-1 rounded-md bg-[#00684a]/50 border border-[#00ed64]/30 text-[10px] font-mono text-[#00ed64]">
                   ● ACTIVE FEED: LIVE
@@ -235,11 +235,11 @@ export default function FeaturesPage() {
                     <span className="text-[9px] font-bold text-[#a8b3bc]/70 tracking-widest font-mono block mb-2">CRITICAL ALERT</span>
                     <div className="p-3 rounded bg-red-950/35 border border-red-900/40 text-left">
                       <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-[9px] font-bold text-red-400 font-mono">FIRE ZONE</span>
+                        <span className="text-[9px] font-bold text-red-400 font-mono">CYCLONE ALERT</span>
                         <span className="text-[8px] bg-red-500/20 px-1 py-0.5 rounded text-red-300 font-mono font-bold">L4</span>
                       </div>
-                      <p className="text-[10px] text-slate-300 leading-normal font-sans">Thermal anomaly registered - California NW Coast</p>
-                      <div className="text-[8px] text-[#a8b3bc]/80 mt-2 font-mono">40.231° N, 122.452° W</div>
+                      <p className="text-[10px] text-slate-300 leading-normal font-sans">Severe cyclonic circulation tracked - Bay of Bengal</p>
+                      <div className="text-[8px] text-[#a8b3bc]/80 mt-2 font-mono">19.821° N, 85.892° E</div>
                     </div>
                   </div>
                 </div>
@@ -258,11 +258,11 @@ export default function FeaturesPage() {
                   <div className="absolute bottom-4 left-4 bg-[#001e2b]/95 border border-[#1c2d38] px-2.5 py-1.5 rounded flex gap-3 text-[8px] font-mono text-left z-10 shadow-lg select-none">
                     <div className="flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                      <span className="text-[#a8b3bc]">FIRE ZONE (INDIA)</span>
+                      <span className="text-[#a8b3bc]">SEVERE WEATHER (INDIA)</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
-                      <span className="text-[#a8b3bc]">SEISMIC</span>
+                      <span className="text-[#a8b3bc]">ALERT ZONES</span>
                     </div>
                   </div>
                 </div>
@@ -282,13 +282,13 @@ export default function FeaturesPage() {
                   <div className="text-[10px] font-mono text-slate-300 leading-normal flex flex-col gap-3">
                     <div className="border-b border-[#1c2d38] pb-2">
                       <span className="text-white block font-bold mb-1">[ANALYSIS]</span>
-                      <p className="text-[#a8b3bc]">Wildfire spread NE at 14kts. Highway 4 structure exposure registered.</p>
+                      <p className="text-[#a8b3bc]">Heavy precipitation front advancing NE at 45 km/h. Coastal warning active.</p>
                     </div>
                     <div>
                       <span className="text-white block font-bold mb-1">[DIRECTIVES]</span>
                       <ul className="list-decimal pl-4 text-[#a8b3bc] space-y-1">
-                        <li>Set perimeter Hwy 4.</li>
-                        <li>Dispatch Station #3.</li>
+                        <li>Issue coastal alert bulletins.</li>
+                        <li>Update district emergency teams.</li>
                       </ul>
                     </div>
                   </div>
@@ -304,7 +304,7 @@ export default function FeaturesPage() {
                 Features Overview
               </h2>
               <p className="mt-3 text-4xl sm:text-5xl md:text-[56px] font-medium tracking-[-1.5px] leading-none text-white">
-                Crisis monitoring powered by intelligence
+                Weather intelligence powered by conversational AI
               </p>
             </div>
 
@@ -363,21 +363,21 @@ export default function FeaturesPage() {
               {/* Header col */}
               <div className="lg:col-span-5 flex flex-col justify-center">
                 <span className="text-xs font-mono font-semibold text-[#00ed64] uppercase tracking-widest">
-                  Enterprise Value
+                  Regional Impact
                 </span>
                 {/* typography.heading-2 style */}
                 <h2 className="mt-3 text-3xl md:text-[36px] font-medium text-white tracking-[-0.5px] leading-[1.25]">
-                  Why RescueLens AI?
+                  Why WeatherGPT?
                 </h2>
                 <p className="mt-4 text-[#a8b3bc] leading-relaxed text-sm md:text-base">
-                  RescueLens AI acts as a digital force multiplier. We ingest scattered, unstructured geospatial alerts and map them into clear visual actions so your teams operate with 100% telemetry alignment.
+                  WeatherGPT bridges complex meteorological data and everyday decision-making. We ingest fragmented weather feeds, Doppler radar, and satellite imagery across India, turning them into natural conversations and timely alerts.
                 </p>
                 <div className="mt-8 flex">
                   <Link
-                    to="/login"
+                    to="/dashboard"
                     className="inline-flex items-center gap-2 text-sm font-semibold text-[#00ed64] hover:text-white transition-colors"
                   >
-                    Start utilizing disaster intelligence <ArrowRight className="w-4 h-4" />
+                    Open WeatherGPT <ArrowRight className="w-4 h-4" />
                   </Link>
                 </div>
               </div>

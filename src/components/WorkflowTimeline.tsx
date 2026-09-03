@@ -6,37 +6,37 @@ import Threads from './Threads'
 const STEPS = [
   {
     num: '01',
-    title: 'Report Incident',
+    title: 'Data Ingestion',
     description:
-      'Field operatives submit real-time disaster reports with geo-tagged imagery, sensor data, and situational context — instantly routing critical intel to the AI pipeline.',
-    accent: 'Incoming Signal',
+      'Real-time weather observations from IMD surface stations, INSAT satellite imagery, GFS and ECMWF numerical models, and WIS 2.0 global exchange feeds are continuously ingested into the forecast pipeline.',
+    accent: 'Multi-Source Feeds',
   },
   {
     num: '02',
-    title: 'AI Analysis',
+    title: 'Query Understanding',
     description:
-      'Advanced computer vision models process satellite and drone imagery, cross-referencing historical patterns to classify damage severity and predict impact zones.',
-    accent: 'Processing Data',
+      'Natural-language processing parses user queries — classifying intent (forecast, alert, climate trend, FAQ), extracting location and time parameters, and detecting regional language context.',
+    accent: 'NLP Engine',
   },
   {
     num: '03',
-    title: 'Target Mapping',
+    title: 'Forecast & Alert Generation',
     description:
-      'Affected regions are identified and overlaid on interactive maps with population density, infrastructure data, and vulnerability scoring for precision response.',
-    accent: 'Zone Detection',
+      'Model ensembles generate hyper-local forecasts while severity classification algorithms evaluate active weather events against IMD warning thresholds for automated alert escalation.',
+    accent: 'AI Modeling',
   },
   {
     num: '04',
-    title: 'Locate Resources',
+    title: 'Contextual Response Assembly',
     description:
-      'Nearby hospitals, shelters, water sources, supply depots, and emergency teams are discovered and ranked by proximity, capacity, and current availability.',
-    accent: 'Resource Discovery',
+      'Plain-language responses are assembled with inline charts, map snippets, and agro-climate advisories tailored to the user\'s profile — whether a farmer, disaster authority, or general citizen.',
+    accent: 'Smart Synthesis',
   },
   {
     num: '05',
-    title: 'Decision Support',
+    title: 'Multi-Channel Delivery',
     description:
-      'Actionable intelligence is synthesized into prioritized response recommendations — enabling commanders to deploy resources faster and save more lives.',
+      'Actionable weather intelligence is delivered through the conversational chat interface, push alert notifications, and structured advisory bulletins for disaster management authorities.',
     accent: 'Response Ready',
   },
 ]
@@ -167,7 +167,7 @@ export default function WorkflowTimeline() {
             className="text-center relative z-10"
           >
             <h2 className="text-xs font-mono tracking-[0.25em] text-brand-green/70 uppercase mb-5">
-              Workflow Pipeline
+              Intelligence Pipeline
             </h2>
             <p className="text-5xl md:text-6xl lg:text-[4.2rem] xl:text-[4.8rem] font-bold tracking-[-0.025em] text-white leading-[1.15]">
               How{' '}
@@ -177,13 +177,13 @@ export default function WorkflowTimeline() {
                 showBorder={false}
                 className="inline-block"
               >
-                RescueLens AI
+                WeatherGPT
               </GradientText>{' '}
               <br className="hidden sm:block" />
-              Coordinates Support
+              Delivers Intelligence
             </p>
             <p className="mt-6 text-lg md:text-xl text-white/50 max-w-2xl mx-auto leading-relaxed font-normal">
-              From first report to actionable decision — an AI-powered pipeline that turns disaster data into coordinated emergency response.
+              From multi-source weather data ingest to conversational response — an AI-powered pipeline delivering actionable climate intelligence across India.
             </p>
           </motion.div>
         </div>

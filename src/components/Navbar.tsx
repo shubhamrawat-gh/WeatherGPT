@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, Sun, Moon } from 'lucide-react'
 import Logo from './Logo'
+import { useTheme } from '../context/ThemeContext'
 
 export default function Navbar() {
+  const { isDark, toggleTheme } = useTheme()
   const [isScrolled, setIsScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const navigate = useNavigate()
@@ -75,7 +77,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
         {/* Brand Logo & Top Left Links */}
         <div className="flex items-center gap-6">
-          <Link to="/" aria-label="RescueLens Home" className="text-white">
+          <Link to="/" aria-label="WeatherGPT Home" className="text-white">
             <Logo iconSizeClass="h-8 w-auto" />
           </Link>
         </div>
@@ -115,21 +117,29 @@ export default function Navbar() {
             onClick={(e) => handleIntakeClick(e, 'report')}
             className="px-4 py-1.5 rounded-full text-xs font-semibold border border-red-500/25 hover:border-red-500/50 bg-red-500/5 hover:bg-red-500/15 text-red-400 shadow-sm transition-all duration-150 ease-out hover:scale-[1.02] active:scale-[0.98] hover:shadow-lg hover:shadow-red-500/10 cursor-pointer"
           >
-            Report Incident
+            Report Event
           </a>
           <a
             href="#intake"
             onClick={(e) => handleIntakeClick(e, 'help')}
             className="px-4 py-1.5 rounded-full text-xs font-semibold border border-brand-green/20 hover:border-brand-green/45 bg-brand-green/5 hover:bg-brand-green/15 text-brand-green/90 hover:text-brand-green shadow-sm transition-all duration-150 ease-out hover:scale-[1.02] active:scale-[0.98] hover:shadow-lg hover:shadow-brand-green/10 cursor-pointer"
           >
-            Get Help
+            Ask Weather
           </a>
-          <div className="w-px h-4 bg-white/[0.08] mx-1" />
+          <div className="w-px h-4 bg-slate-200 dark:bg-white/[0.08] mx-1" />
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="w-8 h-8 rounded-full border border-slate-300 dark:border-[#1c2333] flex items-center justify-center text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.05] transition-colors cursor-pointer"
+            aria-label="Toggle theme"
+          >
+            {isDark ? <Sun className="w-4 h-4 text-slate-300" /> : <Moon className="w-4 h-4 text-slate-700" />}
+          </button>
           <Link
-            to="/login"
+            to="/dashboard"
             className="px-5 py-2 rounded-full text-xs font-bold bg-[#00ed64] hover:bg-[#00b545] text-[#001e2b] shadow-md shadow-[#00ed64]/10 transition-all duration-150 ease-out hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
           >
-            Console Login
+            Dashboard
           </Link>
         </div>
 
@@ -158,14 +168,14 @@ export default function Navbar() {
                 onClick={(e) => handleIntakeClick(e, 'report')}
                 className="text-base font-semibold transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:translate-x-1 text-red-400 hover:text-red-300"
               >
-                Report Incident
+                Report Event
               </a>
               <a
                 href="#intake"
                 onClick={(e) => handleIntakeClick(e, 'help')}
                 className="text-base font-semibold transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:translate-x-1 text-brand-green hover:text-brand-green-dark"
               >
-                Get Help
+                Ask Weather
               </a>
               <div className="w-full h-px my-1 bg-hairline-dark/40" />
               <Link
@@ -198,11 +208,11 @@ export default function Navbar() {
               </Link>
               <div className="w-full h-px my-2 bg-hairline-dark/40" />
               <Link
-                to="/login"
+                to="/dashboard"
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-base font-medium py-1 transition-colors duration-200 text-muted-dark hover:text-white"
+                className="text-base font-medium py-1 transition-colors duration-200 text-[#00ed64] hover:text-white"
               >
-                Login
+                Dashboard
               </Link>
             </div>
           </motion.div>

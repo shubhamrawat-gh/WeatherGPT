@@ -13,7 +13,7 @@ export default function AuthHeader({ title, subtitle }: AuthHeaderProps) {
       <Link 
         to="/" 
         className="mb-5 group transition-transform duration-200 hover:scale-[1.02]"
-        aria-label="RescueLens Home"
+        aria-label="WeatherGPT Home"
       >
         <Logo showText={false} iconSizeClass="h-12 w-auto" />
       </Link>

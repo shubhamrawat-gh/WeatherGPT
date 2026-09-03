@@ -12,6 +12,15 @@ dist
 dist-ssr
 *.local
 
+# Environment variables & secrets
+.env
+.env.*
+!.env.example
+
+# Build & deployment artifacts
+.firebase
+x1
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -22,3 +31,4 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+

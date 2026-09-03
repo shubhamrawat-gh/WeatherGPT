@@ -36,16 +36,16 @@ export default function ContactPage() {
 
   const faqs = [
     {
-      q: "How quickly is disaster data updated?",
-      a: "RescueLens AI continuously monitors trusted public data sources and updates information in near real time."
+      q: "How frequently is weather telemetry updated?",
+      a: "WeatherGPT continuously polls IMD meteorological radars, INSAT satellite feeds, and global NWP models (GFS & ECMWF) every 15 to 60 minutes depending on the data source."
     },
     {
-      q: "Which disaster types are supported?",
-      a: "Currently focused on wildfire and earthquake monitoring, with support for additional hazards planned."
+      q: "Which regions and cities are covered?",
+      a: "All states and union territories across India with hyper-local resolution down to district and block levels, including dedicated agricultural zones and coastal hazard corridors."
     },
     {
-      q: "Can organizations use RescueLens AI?",
-      a: "Yes. The platform is designed for emergency teams, researchers, organizations, and decision-makers."
+      q: "Can disaster management agencies and institutions integrate?",
+      a: "Yes. WeatherGPT provides dedicated advisory channels and automated alert dispatch for state and district disaster management authorities (SDMAs/DDMAs), agricultural departments, and public safety organizations."
     }
   ]
 
@@ -55,8 +55,8 @@ export default function ContactPage() {
   return (
     <>
       <SEO 
-        title="RescueLens AI | Contact Us" 
-        description="Have questions about RescueLens AI? Get in touch with our team for general, support, or business inquiries, or browse our FAQ." 
+        title="WeatherGPT | Contact & Liaison" 
+        description="Have questions about WeatherGPT? Connect with our conversational weather intelligence team or browse our FAQs." 
       />
 
       <div className="w-full bg-[#001e2b] text-white selection:bg-[#00ed64]/35 selection:text-[#001e2b] pb-24">
@@ -83,7 +83,7 @@ export default function ContactPage() {
               transition={{ duration: 0.6, delay: 0.1 }}
               className="text-4xl md:text-7xl font-medium tracking-tight md:tracking-[-1.5px] leading-tight md:leading-[1.10] text-white max-w-4xl mx-auto"
             >
-              Contact Us
+              Contact &amp; Liaison
             </motion.h1>
 
             {/* typography.subtitle style */}
@@ -93,7 +93,7 @@ export default function ContactPage() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="mt-6 text-lg font-normal text-[#a8b3bc] leading-[1.50] max-w-3xl mx-auto"
             >
-              Have questions about RescueLens AI? We'd love to hear from you.
+              Have questions about WeatherGPT or need weather data integration? We're here to assist.
             </motion.p>
           </div>
 
@@ -189,7 +189,7 @@ export default function ContactPage() {
                           id="message"
                           required
                           rows={5}
-                          placeholder="Tell us about your organization's monitoring requirements..."
+                          placeholder="Tell us about your weather intelligence or integration requirements..."
                           className={`${inputClass} resize-none h-auto py-3`}
                           value={message}
                           onChange={(e) => setMessage(e.target.value)}
@@ -233,7 +233,7 @@ export default function ContactPage() {
                       </div>
                       <h3 className="text-2xl font-bold text-white">Message Sent!</h3>
                       <p className="mt-2 text-[#a8b3bc] max-w-sm text-sm">
-                        Thank you for reaching out. A RescueLens emergency intelligence specialist will review your request and get back to you shortly.
+                        Thank you for reaching out. A WeatherGPT specialist will review your request and get back to you shortly.
                       </p>
                       <button
                         onClick={() => setIsSubmitted(false)}
@@ -265,8 +265,8 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <div className="text-[10px] font-mono font-bold tracking-wider text-slate-400 uppercase">General inquiries</div>
-                      <a href="mailto:contact@rescuelens.ai" className="text-sm font-semibold text-[#00ed64] hover:underline">
-                        contact@rescuelens.ai
+                      <a href="mailto:contact@weathergpt.ai" className="text-sm font-semibold text-[#00ed64] hover:underline">
+                        contact@weathergpt.ai
                       </a>
                     </div>
                   </div>
@@ -277,8 +277,8 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <div className="text-[10px] font-mono font-bold tracking-wider text-slate-400 uppercase">Technical support</div>
-                      <a href="mailto:support@rescuelens.ai" className="text-sm font-semibold text-[#00ed64] hover:underline">
-                        support@rescuelens.ai
+                      <a href="mailto:support@weathergpt.ai" className="text-sm font-semibold text-[#00ed64] hover:underline">
+                        support@weathergpt.ai
                       </a>
                     </div>
                   </div>
@@ -288,9 +288,9 @@ export default function ContactPage() {
                       <Briefcase className="w-5 h-5" />
                     </div>
                     <div>
-                      <div className="text-[10px] font-mono font-bold tracking-wider text-slate-400 uppercase">Business & partnerships</div>
-                      <a href="mailto:business@rescuelens.ai" className="text-sm font-semibold text-[#00ed64] hover:underline">
-                        business@rescuelens.ai
+                      <div className="text-[10px] font-mono font-bold tracking-wider text-slate-400 uppercase">Institutional Coordination</div>
+                      <a href="mailto:liaison@weathergpt.ai" className="text-sm font-semibold text-[#00ed64] hover:underline">
+                        liaison@weathergpt.ai
                       </a>
                     </div>
                   </div>

@@ -7,32 +7,32 @@ export default function HowItWorksPage() {
   const steps = [
     {
       step: "01",
-      title: "Collect",
-      desc: "Gather real-time disaster information from NASA FIRMS, USGS, and other trusted public sources.",
+      title: "Ingest",
+      desc: "Gather real-time weather observations from IMD surface stations, Doppler radars, INSAT satellites, and global numerical models (GFS & ECMWF).",
       icon: <Database className="w-6 h-6 text-[#00ed64]" />,
       bg: "bg-[#00ed64]/10",
       accent: "text-[#00ed64]"
     },
     {
       step: "02",
-      title: "Analyze",
-      desc: "AI models process incoming events, identify patterns, and evaluate potential risks.",
+      title: "Understand",
+      desc: "Natural-language processing engine classifies user intent, extracts temporal/spatial entities, and contextualizes regional weather queries.",
       icon: <Cpu className="w-6 h-6 text-indigo-400" />,
       bg: "bg-indigo-500/10",
       accent: "text-indigo-400"
     },
     {
       step: "03",
-      title: "Visualize",
-      desc: "Display incidents on interactive maps and dashboards for rapid understanding.",
+      title: "Forecast & Alert",
+      desc: "Ensemble AI algorithms produce hyper-local forecasts and evaluate severity against IMD alert thresholds for early warning generation.",
       icon: <Map className="w-6 h-6 text-sky-400" />,
       bg: "bg-sky-500/10",
       accent: "text-sky-400"
     },
     {
       step: "04",
-      title: "Respond",
-      desc: "Deliver AI-generated insights, alerts, and recommendations to support decision-making.",
+      title: "Deliver",
+      desc: "Assemble conversational explanations, interactive map visualizer layers, agro-climate bulletins, and multi-channel push alerts.",
       icon: <Send className="w-6 h-6 text-emerald-400" />,
       bg: "bg-emerald-500/10",
       accent: "text-emerald-400"
@@ -40,18 +40,18 @@ export default function HowItWorksPage() {
   ]
 
   const workflowNodes = [
-    { label: "Data Sources", desc: "NASA FIRMS & USGS Feeds", icon: <Radio className="w-5 h-5 text-[#00ed64]" /> },
-    { label: "AI Processing", desc: "Event Filtering & Parsing", icon: <Brain className="w-5 h-5 text-[#00ed64]" /> },
-    { label: "Risk Analysis", desc: "Proximity & Threat Score", icon: <TrendingUp className="w-5 h-5 text-[#00ed64]" /> },
-    { label: "Interactive Dashboard", desc: "Mapbox Geospatial View", icon: <LayoutDashboard className="w-5 h-5 text-[#00ed64]" /> },
-    { label: "Alerts & Insights", desc: "Gemini Bulletins & SMS", icon: <Bell className="w-5 h-5 text-[#00ed64]" /> }
+    { label: "Data Ingestion", desc: "IMD, INSAT, GFS & ECMWF", icon: <Radio className="w-5 h-5 text-[#00ed64]" /> },
+    { label: "NLP Understanding", desc: "Intent & Location Parsing", icon: <Brain className="w-5 h-5 text-[#00ed64]" /> },
+    { label: "Forecast Ensemble", desc: "AI Weather Predictions", icon: <TrendingUp className="w-5 h-5 text-[#00ed64]" /> },
+    { label: "Interactive GIS", desc: "Live Weather & Radar Map", icon: <LayoutDashboard className="w-5 h-5 text-[#00ed64]" /> },
+    { label: "Alert Dispatch", desc: "Multi-Channel Bulletins", icon: <Bell className="w-5 h-5 text-[#00ed64]" /> }
   ]
 
   return (
     <>
       <SEO 
-        title="RescueLens AI | How It Works" 
-        description="Discover how RescueLens AI automatically collects data from NASA and USGS, analyzes risks, maps incidents, and outputs situation summaries." 
+        title="WeatherGPT | How It Works" 
+        description="Discover how WeatherGPT ingests multi-source meteorological data, parses queries with conversational AI, and generates hyper-local forecasts and early warnings." 
       />
 
       <div className="w-full bg-[#001e2b] text-white selection:bg-[#00ed64]/35 selection:text-[#001e2b] pb-24">
@@ -69,7 +69,7 @@ export default function HowItWorksPage() {
               transition={{ duration: 0.6, delay: 0.1 }}
               className="text-4xl md:text-7xl font-medium tracking-tight md:tracking-[-1.5px] leading-tight md:leading-[1.10] text-white max-w-4xl mx-auto"
             >
-              How RescueLens AI Works
+              How WeatherGPT Works
             </motion.h1>
 
             {/* typography.subtitle style */}
@@ -79,7 +79,7 @@ export default function HowItWorksPage() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="mt-6 text-lg font-normal text-[#a8b3bc] leading-[1.50] max-w-3xl mx-auto"
             >
-              From data collection to actionable intelligence in just a few seconds.
+              From meteorological data ingestion to conversational forecast delivery in seconds.
             </motion.p>
           </div>
 
@@ -152,7 +152,7 @@ export default function HowItWorksPage() {
                 End-to-End Operational Pipeline
               </p>
               <p className="mt-2 text-sm text-[#a8b3bc]">
-                Visualizing how information travels from remote physical events to emergency dashboards.
+                Visualizing how information travels from meteorological sensors to conversational AI responses.
               </p>
             </div>
 
@@ -300,17 +300,17 @@ export default function HowItWorksPage() {
 
                 <div className="relative z-10 max-w-2xl mx-auto">
                   <h2 className="text-3xl md:text-[36px] font-medium tracking-[-0.5px] leading-[1.25] mb-4">
-                    Ready to monitor disasters intelligently?
+                    Ready to explore conversational weather intelligence?
                   </h2>
                   <p className="text-[#a8b3bc] text-sm md:text-base mb-10 leading-relaxed">
-                    Empower your response squad with live NASA FIRMS fires, USGS seismographs, Mapbox coordinates, and Gemini summary briefings in one unified dashboard console.
+                    Access real-time forecasts, severity alerts, agro-climate advisories, and interactive weather maps in one unified AI-driven platform.
                   </p>
                   <div className="flex justify-center">
                     <Link
-                      to="/login"
+                      to="/dashboard"
                       className="px-[22px] py-[10px] rounded-full text-sm font-bold bg-[#00ed64] hover:bg-[#00b545] text-[#001e2b] transition-colors shadow-md shadow-[#00ed64]/20 cursor-pointer"
                     >
-                      Try RescueLens AI
+                      Open WeatherGPT
                     </Link>
                   </div>
                 </div>

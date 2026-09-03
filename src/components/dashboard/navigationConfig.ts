@@ -1,13 +1,8 @@
 import { 
-  LayoutDashboard, 
-  ShieldAlert, 
-  Flame, 
-  Activity, 
-  Brain, 
-  TrendingUp, 
-  FileText, 
-  Users, 
-  Key, 
+  MessageSquare, 
+  Map, 
+  AlertTriangle, 
+  BarChart3, 
   Settings 
 } from 'lucide-react'
 
@@ -28,28 +23,18 @@ export interface NavGroup {
 
 export const navigationConfig: NavGroup[] = [
   {
-    title: 'Monitoring',
-    links: [
-      { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
-      { label: 'Live Incidents', to: '/dashboard/incidents', icon: ShieldAlert, badge: { text: '14', type: 'danger' } },
-      { label: 'Wildfires', to: '/dashboard/maps', icon: Flame },
-      { label: 'Earthquakes', to: '/dashboard/maps/layers', icon: Activity }
-    ]
-  },
-  {
     title: 'Intelligence',
     links: [
-      { label: 'AI Insights', to: '/dashboard/analysis', icon: Brain },
-      { label: 'Analytics', to: '/dashboard/analysis/results', icon: TrendingUp },
-      { label: 'Reports', to: '/dashboard/help/history', icon: FileText }
-    ]
+      { label: 'Chat Assistant', to: '/dashboard', icon: MessageSquare },
+      { label: 'Live Weather Map', to: '/dashboard/map', icon: Map },
+      { label: 'Alerts & Warnings', to: '/dashboard/alerts', icon: AlertTriangle, badge: { text: '6', type: 'danger' } },
+      { label: 'Climate Analytics', to: '/dashboard/climate', icon: BarChart3 },
+    ],
   },
   {
-    title: 'Administration',
+    title: 'System',
     links: [
-      { label: 'Team', to: '/dashboard/settings', icon: Users },
-      { label: 'API Access', to: '/dashboard/settings', icon: Key },
-      { label: 'Settings', to: '/dashboard/settings', icon: Settings }
-    ]
-  }
+      { label: 'Settings', to: '/dashboard/settings', icon: Settings },
+    ],
+  },
 ]

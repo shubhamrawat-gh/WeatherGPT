@@ -15,38 +15,31 @@ export interface AnalysisConfig {
 export const AVAILABLE_PROVIDERS: AIProvider[] = [
   {
     id: 'gemini',
-    name: 'Google Gemini Pro Vision',
-    description: 'High-accuracy multimodal analysis, damage severity classification, and context-aware executive summaries.',
-    capabilities: ['damage_assessment', 'infrastructure_analysis', 'situational_intelligence', 'risk_assessment'],
-    supportedFormats: ['images', 'satellite', 'drone', 'photos']
+    name: 'Google Gemini 2.5 Pro Multimodal Vision',
+    description: 'High-accuracy Sub-Himalayan slope analysis, optical drone rockfall vectoring, and automated MDoNER situation briefs.',
+    capabilities: ['slope_stability', 'flood_inundation', 'route_accessibility', 'buffer_proximity'],
+    supportedFormats: ['drone-orthophoto', 'satellite-sentinel2', 'dem-elevation', 'telemetry-log']
   },
   {
-    id: 'huggingface',
-    name: 'Hugging Face Hub (Custom Models)',
-    description: 'Specialized computer vision pipelines for object detection, segmentation, and flood/wildfire damage assessment.',
-    capabilities: ['damage_assessment', 'resource_detection', 'risk_assessment'],
-    supportedFormats: ['images', 'satellite', 'drone', 'photos']
+    id: 'isro_bhuvan',
+    name: 'ISRO Bhuvan & CartoSat-3 Terrain Engine',
+    description: 'Indigenous high-resolution stereoscopic terrain elevation modeling and active landslide scar classification.',
+    capabilities: ['slope_stability', 'route_accessibility'],
+    supportedFormats: ['satellite-sentinel2', 'dem-elevation', 'geotiff']
   },
   {
-    id: 'openai',
-    name: 'OpenAI GPT-4o Multimodal',
-    description: 'Structured metadata extraction, infrastructure hazard identification, and responder coordination summaries.',
-    capabilities: ['infrastructure_analysis', 'resource_detection', 'situational_intelligence'],
-    supportedFormats: ['images', 'photos', 'documents']
+    id: 'imd_doppler',
+    name: 'IMD North East Doppler Radar Pipeline',
+    description: 'Live radar reflectivity and soil saturation modeling for Barail Ridge, Meghalaya Escarpment, and Brahmaputra Floodplain.',
+    capabilities: ['flood_inundation', 'slope_stability'],
+    supportedFormats: ['radar-reflectivity', 'telemetry-log']
   },
   {
-    id: 'local_model',
-    name: 'Local Edge Inference (YOLO / MobileNet)',
-    description: 'Low-latency, offline-compatible edge models for real-time asset tracking and hazard warning coordinates.',
-    capabilities: ['damage_assessment', 'resource_detection'],
-    supportedFormats: ['images', 'drone', 'photos']
-  },
-  {
-    id: 'custom_vision',
-    name: 'Custom Satellite Imagery Pipeline',
-    description: 'Proprietary SAR and multispectral analysis models for landscape flooding boundary tracking and wildfire progression.',
-    capabilities: ['damage_assessment', 'infrastructure_analysis', 'risk_assessment'],
-    supportedFormats: ['satellite']
+    id: 'local_edge',
+    name: 'BRO Mobile Convoy Edge Node (YOLO-v11)',
+    description: 'Offline-compatible edge AI deployed on lead patrol vehicles for real-time rockfall and chokepoint detection.',
+    capabilities: ['route_accessibility', 'slope_stability'],
+    supportedFormats: ['optical-dashcam', 'drone-orthophoto']
   }
 ]
 

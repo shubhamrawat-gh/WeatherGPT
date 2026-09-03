@@ -24,16 +24,13 @@ export default function Footer() {
           <Link to="/contact" className="text-[#a8b3bc] hover:text-[#00ed64] transition-colors duration-200">
             Contact
           </Link>
-          <a href="#privacy" className="text-[#a8b3bc] hover:text-[#00ed64] transition-colors duration-200">
-            Privacy Policy
-          </a>
-          <a href="#terms" className="text-[#a8b3bc] hover:text-[#00ed64] transition-colors duration-200">
-            Terms of Service
-          </a>
+          <span className="text-brand-green/80 font-mono text-[11px]">
+            SIH26068 · Team ZeroLatency
+          </span>
         </div>
 
         <p className="text-[11px] font-mono text-[#a8b3bc]/85">
-          &copy; {currentYear} RescueLens AI. All rights reserved.
+          &copy; {currentYear} WeatherGPT. Conversational AI for Weather & Climate Intelligence.
         </p>
       </div>
     </footer>

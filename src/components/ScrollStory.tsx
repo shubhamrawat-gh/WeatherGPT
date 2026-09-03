@@ -9,20 +9,20 @@ import TypingText from './TypingText'
 gsap.registerPlugin(ScrollTrigger)
 
 // Stable words array for typing animation to prevent timer resets on parent renders
-const TYPING_WORDS = ['Smarter', 'Faster', 'Safer']
+const TYPING_WORDS = ['Intelligent', 'Conversational', 'Actionable']
 
-// Coordinates for guided focus on hotspots
+// Coordinates for guided focus on NER corridors and hubs
 const HOTSPOTS = {
-  wildfire: { lat: 38.0, lng: -97.0, color: '#f97316', maxRadius: 3.5, propagationSpeed: 2.2, repeatPeriod: 1500 }, // North America (Orange)
-  flood: { lat: 22.0, lng: 79.0, color: '#3b82f6', maxRadius: 3.5, propagationSpeed: 2.2, repeatPeriod: 1500 },    // South Asia (Blue)
-  resource: { lat: 48.0, lng: 14.0, color: '#00ed64', maxRadius: 3.5, propagationSpeed: 2.2, repeatPeriod: 1500 } // Europe (Green)
+  wildfire: { lat: 25.57, lng: 91.89, color: '#f97316', maxRadius: 3.5, propagationSpeed: 2.2, repeatPeriod: 1500 }, // Western India / Cyclone (Orange)
+  flood: { lat: 25.67, lng: 94.10, color: '#3b82f6', maxRadius: 3.5, propagationSpeed: 2.2, repeatPeriod: 1500 },    // Northern Plains / Flood (Blue)
+  resource: { lat: 27.33, lng: 88.61, color: '#00ed64', maxRadius: 3.5, propagationSpeed: 2.2, repeatPeriod: 1500 } // Agri Belt / Monsoon (Green)
 }
 
 // Telemetry arcs starting points, ending at corresponding hotspots
 const ARCS = {
-  wildfire: { startLat: 25.0, startLng: -90.0, endLat: 38.0, endLng: -97.0, color: '#f97316' },
-  flood: { startLat: 5.0, startLng: 75.0, endLat: 22.0, endLng: 79.0, color: '#3b82f6' },
-  resource: { startLat: 35.0, startLng: 10.0, endLat: 48.0, endLng: 14.0, color: '#00ed64' }
+  wildfire: { startLat: 26.14, startLng: 91.73, endLat: 25.57, endLng: 91.89, color: '#f97316' }, // IMD Station -> Cyclone Zone
+  flood: { startLat: 25.90, startLng: 93.72, endLat: 25.67, endLng: 94.10, color: '#3b82f6' },   // Satellite -> Flood Zone
+  resource: { startLat: 26.72, startLng: 88.43, endLat: 27.33, endLng: 88.61, color: '#00ed64' } // Model -> Agri Belt
 }
 
 export default function ScrollStory() {
@@ -336,7 +336,7 @@ export default function ScrollStory() {
       )
 
 
-      // 06. Scene 7: RescueLens Reveal (87% -> 95%)
+      // 06. Scene 7: WeatherGPT Reveal (87% -> 95%)
       tl.to(".ai-overlay", {
         opacity: 0,
         duration: 0.03,
@@ -523,15 +523,15 @@ export default function ScrollStory() {
         <div className="flex flex-col md:flex-row items-center justify-between gap-8 lg:gap-12 w-full">
           <div className="flex flex-col items-start text-left w-full md:w-[55%] lg:w-[52%]">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-[1.15] m-0">
-              See Disasters Faster. <br />
+              Understand Weather Instantly. <br />
               Respond <TypingText words={TYPING_WORDS} />
             </h1>
             <p className="mt-6 text-base text-muted-dark leading-relaxed font-sans max-w-xl m-0">
-              Analyze disaster imagery, identify affected regions, discover critical resources, and support emergency response teams with actionable AI-driven insights.
+              Get real-time forecasts, severity-based alerts, and climate intelligence through one conversational interface — powered by IMD, INSAT, GFS, and ECMWF data.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-4 w-full">
               <Link
-                to="/login"
+                to="/dashboard"
                 className="text-sm font-semibold text-canvas-dark bg-brand-green hover:bg-brand-green-dark px-8 py-3.5 rounded-full shadow-lg shadow-brand-green/10 transition-all duration-150 ease-out hover:scale-[1.02] active:scale-[0.98] flex items-center gap-1.5 group"
               >
                 Get Started
@@ -573,15 +573,15 @@ export default function ScrollStory() {
           {/* SCENE 1: Left Text Column */}
           <div className="hero-text-panel flex flex-col items-start text-left w-full md:w-[55%] lg:w-[52%] z-10 pointer-events-auto">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-[1.15] m-0">
-              See Disasters Faster. <br />
+              Understand Weather Instantly. <br />
               Respond <TypingText words={TYPING_WORDS} />
             </h1>
             <p className="mt-6 text-base text-muted-dark leading-relaxed font-sans max-w-xl m-0">
-              Analyze disaster imagery, identify affected regions, discover critical resources, and support emergency response teams with actionable AI-driven insights.
+              Get real-time forecasts, severity-based alerts, and climate intelligence through one conversational interface — powered by IMD, INSAT, GFS, and ECMWF data.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-4 w-full">
               <Link
-                to="/login"
+                to="/dashboard"
                 className="text-sm font-semibold text-canvas-dark bg-brand-green hover:bg-brand-green-dark px-8 py-3.5 rounded-full shadow-lg shadow-brand-green/10 transition-all duration-150 ease-out hover:scale-[1.02] active:scale-[0.98] flex items-center gap-1.5 group"
               >
                 Get Started
@@ -605,59 +605,59 @@ export default function ScrollStory() {
           </div>
 
           {/* SCENE 4: Hotspot Cards */}
-          {/* Node 1: Wildfire Card */}
+          {/* Node 1: Western India / Cyclone Card */}
           <div className="node-card-wildfire absolute md:right-12 right-[5%] bottom-[8%] md:bottom-auto md:top-[30%] max-w-sm w-[90%] md:w-[320px] glass-panel p-6 rounded-2xl border-l-4 border-l-orange-500 opacity-0 scale-95 pointer-events-auto shadow-2xl shadow-orange-500/5 transition-all">
             <div className="flex items-center gap-2 mb-3">
               <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
-              <span className="text-[10px] font-mono tracking-widest text-orange-400 font-bold uppercase">North America Telemetry</span>
+              <span className="text-[10px] font-mono tracking-widest text-orange-400 font-bold uppercase">Western India</span>
             </div>
-            <h3 className="text-lg font-bold text-white mb-4">Wildfire Detection</h3>
+            <h3 className="text-lg font-bold text-white mb-4">Cyclone Tracking</h3>
             <div className="grid grid-cols-2 gap-4 border-t border-hairline-dark/40 pt-4">
               <div>
-                <div className="text-[9px] font-mono text-muted-dark uppercase tracking-wider">AI Confidence</div>
-                <div className="text-base font-bold text-white mt-1">96%</div>
+                <div className="text-[9px] font-mono text-muted-dark uppercase tracking-wider">Wind Speed</div>
+                <div className="text-base font-bold text-white mt-1">145 km/h</div>
               </div>
               <div>
-                <div className="text-[9px] font-mono text-muted-dark uppercase tracking-wider">Source</div>
-                <div className="text-base font-bold text-white mt-1">NASA FIRMS</div>
+                <div className="text-[9px] font-mono text-muted-dark uppercase tracking-wider">Category</div>
+                <div className="text-base font-bold text-white mt-1">Severe</div>
               </div>
             </div>
           </div>
 
-          {/* Node 2: Flood Card */}
+          {/* Node 2: Northern Plains / Flood Warning Card */}
           <div className="node-card-flood absolute md:left-12 left-[5%] bottom-[8%] md:bottom-auto md:top-[35%] max-w-sm w-[90%] md:w-[320px] glass-panel p-6 rounded-2xl border-l-4 border-l-blue-500 opacity-0 scale-95 pointer-events-auto shadow-2xl shadow-blue-500/5 transition-all">
             <div className="flex items-center gap-2 mb-3">
               <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-              <span className="text-[10px] font-mono tracking-widest text-blue-400 font-bold uppercase">South Asia Telemetry</span>
+              <span className="text-[10px] font-mono tracking-widest text-blue-400 font-bold uppercase">Northern Plains</span>
             </div>
-            <h3 className="text-lg font-bold text-white mb-4">Flood Monitoring</h3>
+            <h3 className="text-lg font-bold text-white mb-4">Flood Warning</h3>
             <div className="grid grid-cols-2 gap-4 border-t border-hairline-dark/40 pt-4">
               <div>
-                <div className="text-[9px] font-mono text-muted-dark uppercase tracking-wider">Affected Area</div>
-                <div className="text-base font-bold text-white mt-1">14 km²</div>
+                <div className="text-[9px] font-mono text-muted-dark uppercase tracking-wider">River Level</div>
+                <div className="text-base font-bold text-white mt-1">+2.4m</div>
               </div>
               <div>
                 <div className="text-[9px] font-mono text-muted-dark uppercase tracking-wider">Severity</div>
-                <div className="text-base font-bold text-blue-400 mt-1">High</div>
+                <div className="text-base font-bold text-blue-400 mt-1">Extreme</div>
               </div>
             </div>
           </div>
 
-          {/* Node 3: Emergency Resources Card */}
+          {/* Node 3: Agri Belt / Monsoon Advisory Card */}
           <div className="node-card-resource absolute md:right-12 right-[5%] bottom-[8%] md:bottom-auto md:top-[30%] max-w-sm w-[90%] md:w-[320px] glass-panel p-6 rounded-2xl border-l-4 border-l-brand-green opacity-0 scale-95 pointer-events-auto shadow-2xl shadow-brand-green/5 transition-all">
             <div className="flex items-center gap-2 mb-3">
               <span className="w-2 h-2 rounded-full bg-brand-green animate-pulse" />
-              <span className="text-[10px] font-mono tracking-widest text-brand-green font-bold uppercase">Europe Telemetry</span>
+              <span className="text-[10px] font-mono tracking-widest text-brand-green font-bold uppercase">Agri Belt</span>
             </div>
-            <h3 className="text-lg font-bold text-white mb-4">Emergency Resources</h3>
+            <h3 className="text-lg font-bold text-white mb-4">Monsoon Advisory</h3>
             <div className="grid grid-cols-2 gap-4 border-t border-hairline-dark/40 pt-4">
               <div>
-                <div className="text-[9px] font-mono text-muted-dark uppercase tracking-wider">Shelters</div>
-                <div className="text-base font-bold text-white mt-1">24 Available</div>
+                <div className="text-[9px] font-mono text-muted-dark uppercase tracking-wider">Rainfall</div>
+                <div className="text-base font-bold text-white mt-1">124 mm</div>
               </div>
               <div>
-                <div className="text-[9px] font-mono text-muted-dark uppercase tracking-wider">Response ETA</div>
-                <div className="text-base font-bold text-brand-green mt-1">18 min</div>
+                <div className="text-[9px] font-mono text-muted-dark uppercase tracking-wider">Sowing Window</div>
+                <div className="text-base font-bold text-brand-green mt-1">Optimal</div>
               </div>
             </div>
           </div>
@@ -693,59 +693,59 @@ export default function ScrollStory() {
 
                 {/* Feature items */}
                 <div className="flex flex-col gap-4">
-                  {/* Item 1: Satellite Intelligence */}
+                  {/* Item 1: Satellite SAR Radar */}
                   <div className="intel-item group flex items-start gap-3 p-2.5 -mx-2.5 rounded-xl transition-all duration-300 hover:bg-brand-green/[0.04] cursor-default">
                     <div className="flex-shrink-0 mt-0.5 w-5 h-5 text-brand-green" style={{ animation: 'icon-pulse 4s ease-in-out infinite' }}>
                       <Satellite className="w-5 h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-semibold text-white tracking-wide leading-none">Satellite Intelligence</span>
+                        <span className="text-[11px] font-semibold text-white tracking-wide leading-none">INSAT Satellite Imagery</span>
                         <div className="w-1 h-1 rounded-full bg-brand-green/60 flex-shrink-0" style={{ animation: 'status-blink 3.2s ease-in-out infinite 0.4s' }} />
                       </div>
-                      <p className="text-[10px] text-muted-dark/80 leading-relaxed mt-1.5 font-sans">Monitor wildfires, floods and storms using global satellite feeds.</p>
+                      <p className="text-[10px] text-muted-dark/80 leading-relaxed mt-1.5 font-sans">Track cloud formations, cyclone paths, and precipitation patterns.</p>
                     </div>
                   </div>
 
-                  {/* Item 2: Sensor Networks */}
+                  {/* Item 2: Weather & Precipitation */}
                   <div className="intel-item group flex items-start gap-3 p-2.5 -mx-2.5 rounded-xl transition-all duration-300 hover:bg-brand-green/[0.04] cursor-default">
                     <div className="flex-shrink-0 mt-0.5 w-5 h-5 text-brand-green" style={{ animation: 'icon-pulse 4s ease-in-out infinite 0.5s' }}>
                       <Radio className="w-5 h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-semibold text-white tracking-wide leading-none">Sensor Networks</span>
+                        <span className="text-[11px] font-semibold text-white tracking-wide leading-none">IMD Observation Network</span>
                         <div className="w-1 h-1 rounded-full bg-brand-green/60 flex-shrink-0" style={{ animation: 'status-blink 3.2s ease-in-out infinite 0.9s' }} />
                       </div>
-                      <p className="text-[10px] text-muted-dark/80 leading-relaxed mt-1.5 font-sans">Aggregate weather, environmental and field sensor data.</p>
+                      <p className="text-[10px] text-muted-dark/80 leading-relaxed mt-1.5 font-sans">Ingest real-time temperature, humidity, and rainfall measurements.</p>
                     </div>
                   </div>
 
-                  {/* Item 3: Ground Reports */}
+                  {/* Item 3: Field Transit Reports */}
                   <div className="intel-item group flex items-start gap-3 p-2.5 -mx-2.5 rounded-xl transition-all duration-300 hover:bg-brand-green/[0.04] cursor-default">
                     <div className="flex-shrink-0 mt-0.5 w-5 h-5 text-brand-green" style={{ animation: 'icon-pulse 4s ease-in-out infinite 1s' }}>
                       <Smartphone className="w-5 h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-semibold text-white tracking-wide leading-none">Ground Reports</span>
+                        <span className="text-[11px] font-semibold text-white tracking-wide leading-none">WIS 2.0 Global Exchange</span>
                         <div className="w-1 h-1 rounded-full bg-brand-green/60 flex-shrink-0" style={{ animation: 'status-blink 3.2s ease-in-out infinite 1.4s' }} />
                       </div>
-                      <p className="text-[10px] text-muted-dark/80 leading-relaxed mt-1.5 font-sans">Collect real-time reports from citizens and responders.</p>
+                      <p className="text-[10px] text-muted-dark/80 leading-relaxed mt-1.5 font-sans">Global meteorological data exchange from WMO member nations.</p>
                     </div>
                   </div>
 
-                  {/* Item 4: Geospatial Data */}
+                  {/* Item 4: GIS Road Network */}
                   <div className="intel-item group flex items-start gap-3 p-2.5 -mx-2.5 rounded-xl transition-all duration-300 hover:bg-brand-green/[0.04] cursor-default">
                     <div className="flex-shrink-0 mt-0.5 w-5 h-5 text-brand-green" style={{ animation: 'icon-pulse 4s ease-in-out infinite 1.5s' }}>
                       <Map className="w-5 h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-semibold text-white tracking-wide leading-none">Geospatial Data</span>
+                        <span className="text-[11px] font-semibold text-white tracking-wide leading-none">GFS & ECMWF Models</span>
                         <div className="w-1 h-1 rounded-full bg-brand-green/60 flex-shrink-0" style={{ animation: 'status-blink 3.2s ease-in-out infinite 1.9s' }} />
                       </div>
-                      <p className="text-[10px] text-muted-dark/80 leading-relaxed mt-1.5 font-sans">Combine location intelligence with disaster mapping.</p>
+                      <p className="text-[10px] text-muted-dark/80 leading-relaxed mt-1.5 font-sans">Numerical weather prediction models for multi-day forecasts.</p>
                     </div>
                   </div>
                 </div>
@@ -766,59 +766,59 @@ export default function ScrollStory() {
 
                 {/* Feature items */}
                 <div className="flex flex-col gap-4">
-                  {/* Item 1: AI Threat Analysis */}
+                  {/* Item 1: Route Risk Prediction */}
                   <div className="intel-item group flex items-start gap-3 p-2.5 -mx-2.5 rounded-xl transition-all duration-300 hover:bg-brand-green/[0.04] cursor-default">
                     <div className="flex-shrink-0 mt-0.5 w-5 h-5 text-brand-green" style={{ animation: 'icon-pulse 4s ease-in-out infinite 0.3s' }}>
                       <BrainCircuit className="w-5 h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-semibold text-white tracking-wide leading-none">AI Threat Analysis</span>
+                        <span className="text-[11px] font-semibold text-white tracking-wide leading-none">AI Forecast Generation</span>
                         <div className="w-1 h-1 rounded-full bg-brand-green/60 flex-shrink-0" style={{ animation: 'status-blink 3.2s ease-in-out infinite 0.7s' }} />
                       </div>
-                      <p className="text-[10px] text-muted-dark/80 leading-relaxed mt-1.5 font-sans">Automatically classify incidents and assess severity.</p>
+                      <p className="text-[10px] text-muted-dark/80 leading-relaxed mt-1.5 font-sans">Generate hyper-local forecasts with model ensemble analysis.</p>
                     </div>
                   </div>
 
-                  {/* Item 2: Impact Prediction */}
+                  {/* Item 2: Corridor Vulnerability */}
                   <div className="intel-item group flex items-start gap-3 p-2.5 -mx-2.5 rounded-xl transition-all duration-300 hover:bg-brand-green/[0.04] cursor-default">
                     <div className="flex-shrink-0 mt-0.5 w-5 h-5 text-brand-green" style={{ animation: 'icon-pulse 4s ease-in-out infinite 0.8s' }}>
                       <ShieldAlert className="w-5 h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-semibold text-white tracking-wide leading-none">Impact Prediction</span>
+                        <span className="text-[11px] font-semibold text-white tracking-wide leading-none">Severity Alert Classification</span>
                         <div className="w-1 h-1 rounded-full bg-brand-green/60 flex-shrink-0" style={{ animation: 'status-blink 3.2s ease-in-out infinite 1.2s' }} />
                       </div>
-                      <p className="text-[10px] text-muted-dark/80 leading-relaxed mt-1.5 font-sans">Estimate affected regions and population exposure.</p>
+                      <p className="text-[10px] text-muted-dark/80 leading-relaxed mt-1.5 font-sans">Classify weather events by IMD severity thresholds.</p>
                     </div>
                   </div>
 
-                  {/* Item 3: Resource Coordination */}
+                  {/* Item 3: Multimodal Logistics Rerouting */}
                   <div className="intel-item group flex items-start gap-3 p-2.5 -mx-2.5 rounded-xl transition-all duration-300 hover:bg-brand-green/[0.04] cursor-default">
                     <div className="flex-shrink-0 mt-0.5 w-5 h-5 text-brand-green" style={{ animation: 'icon-pulse 4s ease-in-out infinite 1.3s' }}>
                       <Ambulance className="w-5 h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-semibold text-white tracking-wide leading-none">Resource Coordination</span>
+                        <span className="text-[11px] font-semibold text-white tracking-wide leading-none">Agro-Climate Advisories</span>
                         <div className="w-1 h-1 rounded-full bg-brand-green/60 flex-shrink-0" style={{ animation: 'status-blink 3.2s ease-in-out infinite 1.7s' }} />
                       </div>
-                      <p className="text-[10px] text-muted-dark/80 leading-relaxed mt-1.5 font-sans">Support emergency teams with deployment insights.</p>
+                      <p className="text-[10px] text-muted-dark/80 leading-relaxed mt-1.5 font-sans">Deliver sowing, irrigation, and harvest guidance to farmers.</p>
                     </div>
                   </div>
 
-                  {/* Item 4: Alert Distribution */}
+                  {/* Item 4: MDoNER Dispatch Sync */}
                   <div className="intel-item group flex items-start gap-3 p-2.5 -mx-2.5 rounded-xl transition-all duration-300 hover:bg-brand-green/[0.04] cursor-default">
                     <div className="flex-shrink-0 mt-0.5 w-5 h-5 text-brand-green" style={{ animation: 'icon-pulse 4s ease-in-out infinite 1.8s' }}>
                       <Megaphone className="w-5 h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-semibold text-white tracking-wide leading-none">Alert Distribution</span>
+                        <span className="text-[11px] font-semibold text-white tracking-wide leading-none">Automated Alert Dispatch</span>
                         <div className="w-1 h-1 rounded-full bg-brand-green/60 flex-shrink-0" style={{ animation: 'status-blink 3.2s ease-in-out infinite 2.2s' }} />
                       </div>
-                      <p className="text-[10px] text-muted-dark/80 leading-relaxed mt-1.5 font-sans">Deliver critical information to agencies and responders.</p>
+                      <p className="text-[10px] text-muted-dark/80 leading-relaxed mt-1.5 font-sans">Push severity alerts to disaster management authorities.</p>
                     </div>
                   </div>
                 </div>
@@ -836,19 +836,19 @@ export default function ScrollStory() {
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-1.5">
                     <Satellite className="w-3 h-3 text-brand-green" />
-                    <span className="text-[9px] text-white/80 font-medium">Satellite Intel</span>
+                    <span className="text-[9px] text-white/80 font-medium">INSAT Satellite</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Radio className="w-3 h-3 text-brand-green" />
-                    <span className="text-[9px] text-white/80 font-medium">Sensor Networks</span>
+                    <span className="text-[9px] text-white/80 font-medium">IMD Stations</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Smartphone className="w-3 h-3 text-brand-green" />
-                    <span className="text-[9px] text-white/80 font-medium">Ground Reports</span>
+                    <span className="text-[9px] text-white/80 font-medium">WIS 2.0 Data</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Map className="w-3 h-3 text-brand-green" />
-                    <span className="text-[9px] text-white/80 font-medium">Geospatial Data</span>
+                    <span className="text-[9px] text-white/80 font-medium">GFS & ECMWF</span>
                   </div>
                 </div>
               </div>
@@ -861,19 +861,19 @@ export default function ScrollStory() {
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-1.5">
                     <BrainCircuit className="w-3 h-3 text-brand-green" />
-                    <span className="text-[9px] text-white/80 font-medium">AI Threat Analysis</span>
+                    <span className="text-[9px] text-white/80 font-medium">AI Forecasts</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <ShieldAlert className="w-3 h-3 text-brand-green" />
-                    <span className="text-[9px] text-white/80 font-medium">Impact Prediction</span>
+                    <span className="text-[9px] text-white/80 font-medium">Alert Severity</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Ambulance className="w-3 h-3 text-brand-green" />
-                    <span className="text-[9px] text-white/80 font-medium">Resource Coord.</span>
+                    <span className="text-[9px] text-white/80 font-medium">Agro Advisories</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Megaphone className="w-3 h-3 text-brand-green" />
-                    <span className="text-[9px] text-white/80 font-medium">Alert Distribution</span>
+                    <span className="text-[9px] text-white/80 font-medium">Alert Dispatch</span>
                   </div>
                 </div>
               </div>
@@ -882,11 +882,12 @@ export default function ScrollStory() {
 
           <h2 className="reveal-text absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full px-6 text-center text-4xl md:text-5xl lg:text-7xl font-bold tracking-tight text-white leading-tight max-w-4xl mx-auto opacity-0 z-20 pointer-events-none">
             <span className="word inline-block mr-3 md:mr-4 text-white">From</span>
-            <span className="word inline-block mr-3 md:mr-4 text-white">Detection</span>
+            <span className="word inline-block mr-3 md:mr-4 text-white">Weather</span>
+            <span className="word inline-block mr-3 md:mr-4 text-white">Query</span>
             <span className="word inline-block mr-3 md:mr-4 text-white">to</span>
-            <span className="word inline-block mr-3 md:mr-4 text-white">Decision</span>
-            <span className="word inline-block mr-3 md:mr-4 text-white">in</span>
-            <span className="word inline-block text-brand-green">Seconds.</span>
+            <span className="word inline-block mr-3 md:mr-4 text-white">Actionable</span>
+            <span className="word inline-block mr-3 md:mr-4 text-white">Intelligence</span>
+            <span className="word inline-block text-brand-green">in Seconds.</span>
           </h2>
 
         </div>

@@ -36,8 +36,8 @@ export default function ForgotPasswordPage() {
   return (
     <>
       <SEO 
-        title="Forgot Password | RescueLens AI Console" 
-        description="Request password recovery instructions for your RescueLens AI account." 
+        title="Forgot Password | WeatherGPT Console" 
+        description="Request password recovery instructions for your WeatherGPT account." 
       />
 
       <AuthLayout>

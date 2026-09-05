@@ -168,3 +168,5 @@ WeatherGPT/
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+<!-- Documentation verified: 2026-09-06 -->

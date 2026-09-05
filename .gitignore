@@ -20,6 +20,9 @@ dist-ssr
 # Build & deployment artifacts
 .firebase
 x1
+.cache/
+scratch/
+scratch*.json
 
 # Editor directories and files
 .vscode/*

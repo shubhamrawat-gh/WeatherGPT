@@ -1,9 +1,9 @@
 import { 
-  MessageSquare, 
-  Map, 
-  AlertTriangle, 
-  BarChart3, 
-  Settings 
+  MessagesSquare, 
+  Radar, 
+  ShieldAlert, 
+  AreaChart, 
+  SlidersHorizontal 
 } from 'lucide-react'
 
 export interface NavItem {
@@ -25,16 +25,16 @@ export const navigationConfig: NavGroup[] = [
   {
     title: 'Intelligence',
     links: [
-      { label: 'Chat Assistant', to: '/dashboard', icon: MessageSquare },
-      { label: 'Live Weather Map', to: '/dashboard/map', icon: Map },
-      { label: 'Alerts & Warnings', to: '/dashboard/alerts', icon: AlertTriangle, badge: { text: '6', type: 'danger' } },
-      { label: 'Climate Analytics', to: '/dashboard/climate', icon: BarChart3 },
+      { label: 'Chats', to: '/dashboard', icon: MessagesSquare },
+      { label: 'Live Weather Map', to: '/dashboard/map', icon: Radar },
+      { label: 'Alerts & Warnings', to: '/dashboard/alerts', icon: ShieldAlert, badge: { text: '6 Active', type: 'success' } },
+      { label: 'Climate Analytics', to: '/dashboard/climate', icon: AreaChart },
     ],
   },
   {
     title: 'System',
     links: [
-      { label: 'Settings', to: '/dashboard/settings', icon: Settings },
+      { label: 'Settings & Units', to: '/dashboard/settings', icon: SlidersHorizontal },
     ],
   },
 ]

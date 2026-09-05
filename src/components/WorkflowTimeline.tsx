@@ -139,6 +139,7 @@ export default function WorkflowTimeline() {
     <section
       id="how-it-works"
       className="relative py-32 md:py-40 px-6 border-t border-white/[0.04]"
+      style={{ contentVisibility: 'auto', containIntrinsicSize: '0 1200px' }}
     >
       <div className="max-w-5xl mx-auto relative z-10">
         {/* Section header container containing Threads background for text only */}

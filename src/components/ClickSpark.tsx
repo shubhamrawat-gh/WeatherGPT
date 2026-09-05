@@ -31,39 +31,29 @@ const ClickSpark = ({
 }: ClickSparkProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const sparksRef = useRef<Spark[]>([]);
-  const startTimeRef = useRef<number | null>(null);
+  const animationIdRef = useRef<number | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const parent = canvas.parentElement;
-    if (!parent) return;
-
-    let resizeTimeout: number;
-
     const resizeCanvas = () => {
-      const { width, height } = parent.getBoundingClientRect();
-      if (canvas.width !== width || canvas.height !== height) {
-        canvas.width = width;
-        canvas.height = height;
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       }
     };
 
-    const handleResize = () => {
-      window.clearTimeout(resizeTimeout);
-      resizeTimeout = window.setTimeout(resizeCanvas, 100);
-    };
-
-
-    const ro = new ResizeObserver(handleResize);
-    ro.observe(parent);
-
     resizeCanvas();
+    window.addEventListener('resize', resizeCanvas, { passive: true });
 
     return () => {
-      ro.disconnect();
-      window.clearTimeout(resizeTimeout);
+      window.removeEventListener('resize', resizeCanvas);
     };
   }, []);
 
@@ -83,19 +73,16 @@ const ClickSpark = ({
     [easing]
   );
 
-  useEffect(() => {
+  const startAnimation = useCallback(() => {
+    if (animationIdRef.current !== null) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let animationId: number;
-
     const draw = (timestamp: number) => {
-      if (!startTimeRef.current) {
-        startTimeRef.current = timestamp;
-      }
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
 
       sparksRef.current = sparksRef.current.filter(spark => {
         const elapsed = timestamp - spark.startTime;
@@ -124,22 +111,29 @@ const ClickSpark = ({
         return true;
       });
 
-      animationId = requestAnimationFrame(draw);
+      if (sparksRef.current.length > 0) {
+        animationIdRef.current = requestAnimationFrame(draw);
+      } else {
+        ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+        animationIdRef.current = null;
+      }
     };
 
-    animationId = requestAnimationFrame(draw);
+    animationIdRef.current = requestAnimationFrame(draw);
+  }, [duration, easeFunc, extraScale, sparkColor, sparkRadius, sparkSize]);
 
+  useEffect(() => {
     return () => {
-      cancelAnimationFrame(animationId);
+      if (animationIdRef.current !== null) {
+        cancelAnimationFrame(animationIdRef.current);
+        animationIdRef.current = null;
+      }
     };
-  }, [sparkColor, sparkSize, sparkRadius, sparkCount, duration, easeFunc, extraScale]);
+  }, []);
 
   const handleClick = (e: MouseEvent<HTMLDivElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const x = e.clientX;
+    const y = e.clientY;
 
     const now = performance.now();
     const newSparks = Array.from({ length: sparkCount }, (_, i) => ({
@@ -150,6 +144,7 @@ const ClickSpark = ({
     }));
 
     sparksRef.current.push(...newSparks);
+    startAnimation();
   };
 
   return (
@@ -157,21 +152,22 @@ const ClickSpark = ({
       style={{
         position: 'relative',
         width: '100%',
-        height: '100%'
+        minHeight: '100%'
       }}
       onClick={handleClick}
     >
       <canvas
         ref={canvasRef}
         style={{
-          width: '100%',
-          height: '100%',
+          width: '100vw',
+          height: '100vh',
           display: 'block',
           userSelect: 'none',
-          position: 'absolute',
+          position: 'fixed',
           top: 0,
           left: 0,
-          pointerEvents: 'none'
+          pointerEvents: 'none',
+          zIndex: 999
         }}
       />
       {children}

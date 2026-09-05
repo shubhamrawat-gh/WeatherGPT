@@ -18,7 +18,7 @@ export default function DashboardLayout() {
   }, [isSidebarCollapsed])
 
   return (
-    <div className="flex h-screen w-full bg-[#00141e] text-[#f0f4f8] overflow-hidden font-sans">
+    <div className="flex h-screen w-full dark:bg-[#0a0a0a] bg-slate-100 dark:text-[#f0f4f8] text-slate-900 overflow-hidden font-sans">
       {/* Navigation Sidebar (Desktop Full Height) */}
       <DashboardSidebar
         isOpen={sidebarOpen}
@@ -34,7 +34,7 @@ export default function DashboardLayout() {
       />
 
       {/* Main Right Content Section */}
-      <div className="flex flex-col flex-1 h-full overflow-hidden bg-[#00141e]">
+      <div className="flex flex-col flex-1 h-full overflow-hidden dark:bg-[#0a0a0a] bg-slate-100">
         {/* Minimal Dashboard Topbar */}
         <DashboardTopbar
           onMenuToggle={() => setSidebarOpen(true)}
@@ -43,7 +43,7 @@ export default function DashboardLayout() {
         />
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-hidden bg-[#00141e] flex flex-col relative">
+        <main className="flex-1 overflow-hidden dark:bg-[#0a0a0a] bg-slate-50 flex flex-col relative">
           <Suspense
             fallback={
               <div className="flex-1 flex items-center justify-center h-full w-full">

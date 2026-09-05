@@ -2,12 +2,13 @@ import { createBrowserRouter } from 'react-router-dom'
 import { lazy } from 'react'
 import AppLayout from '../components/AppLayout'
 import LandingPage from '../pages/LandingPage'
-import LoginPage from '../pages/LoginPage'
-import ForgotPasswordPage from '../pages/ForgotPasswordPage'
-import ResetPasswordPage from '../pages/ResetPasswordPage'
-import FeaturesPage from '../pages/FeaturesPage'
-import HowItWorksPage from '../pages/HowItWorksPage'
-import ContactPage from '../pages/ContactPage'
+
+const FeaturesPage = lazy(() => import('../pages/FeaturesPage'))
+const HowItWorksPage = lazy(() => import('../pages/HowItWorksPage'))
+const ContactPage = lazy(() => import('../pages/ContactPage'))
+const LoginPage = lazy(() => import('../pages/LoginPage'))
+const ForgotPasswordPage = lazy(() => import('../pages/ForgotPasswordPage'))
+const ResetPasswordPage = lazy(() => import('../pages/ResetPasswordPage'))
 
 // WeatherGPT Dashboard Layout & Pages (Lazy-Loaded)
 import DashboardLayout from '../components/dashboard/DashboardLayout'

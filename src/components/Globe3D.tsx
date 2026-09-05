@@ -26,6 +26,9 @@ interface Globe3DProps {
 // Global cache for land dots to prevent recalculation on every mount
 const landDotsCache = new Map<string, any[]>()
 
+// Global cache for GeoJSON to prevent re-fetching on every mount
+let cachedCountriesGeoJson: any = null
+
 const Globe3D = forwardRef<Globe3DRef, Globe3DProps & { disableTelemetry?: boolean }>(({
   onCountrySelect,
   onCountryHover,
@@ -44,6 +47,9 @@ const Globe3D = forwardRef<Globe3DRef, Globe3DProps & { disableTelemetry?: boole
   const containerRef = useRef<HTMLDivElement>(null)
   const globeInstanceRef = useRef<any>(null)
   const [landDots, setLandDots] = useState<any[]>([])
+  const isIntersectingRef = useRef(false)
+  const rotationAnimationFrameIdRef = useRef<number | null>(null)
+  const rotateCloudsFnRef = useRef<(() => void) | null>(null)
   
   // Refs to hold callbacks to avoid stale closures in WebGL context
   const onCountrySelectRef = useRef(onCountrySelect)
@@ -104,26 +110,33 @@ const Globe3D = forwardRef<Globe3DRef, Globe3DProps & { disableTelemetry?: boole
     return dots
   }, [])
 
-  // Load land dots topology image (80 rows for ultra fast 60fps render)
+  // Load land dots topology image (80 rows for ultra fast 60fps render) only if telemetry is enabled
   useEffect(() => {
+    if (disableTelemetry) return
+
+    const cacheKey = "https://unpkg.com/three-globe@2.31.1/example/img/earth-topology.png_80"
+    if (landDotsCache.has(cacheKey)) {
+      setLandDots(landDotsCache.get(cacheKey) || [])
+      return
+    }
+
     const img = new Image()
     img.crossOrigin = "anonymous"
     img.src = "https://unpkg.com/three-globe@2.31.1/example/img/earth-topology.png"
     img.onload = () => {
-      const dots = extractLandDots(img, 80) // 80 rows is highly optimized, loads instantly
+      const dots = extractLandDots(img, 80)
       setLandDots(dots)
     }
     img.onerror = (err) => {
       console.error("Failed to load topology map for dotted globe:", err)
     }
-  }, [extractLandDots])
+  }, [disableTelemetry, extractLandDots])
 
   // Initialize Globe (Runs exactly ONCE on mount)
   useEffect(() => {
     if (!containerRef.current) return
 
     let cloudsMesh: THREE.Mesh | null = null
-    let rotationAnimationFrameId: number | null = null
 
     const globe = (Globe as any)()(containerRef.current)
       .globeImageUrl("//cdn.jsdelivr.net/npm/three-globe/example/img/earth-blue-marble.jpg")
@@ -152,7 +165,7 @@ const Globe3D = forwardRef<Globe3DRef, Globe3DProps & { disableTelemetry?: boole
     try {
       const renderer = globe.renderer()
       if (renderer) {
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5))
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5))
       }
     } catch (_) { /* renderer not yet available */ }
 
@@ -164,7 +177,7 @@ const Globe3D = forwardRef<Globe3DRef, Globe3DProps & { disableTelemetry?: boole
     const textureLoader = new THREE.TextureLoader()
     textureLoader.load(CLOUDS_IMG_URL, (cloudsTexture: any) => {
       const globeRadius = globe.getGlobeRadius()
-      const cloudsGeo = new THREE.SphereGeometry(globeRadius * (1 + CLOUDS_ALT), 48, 48)
+      const cloudsGeo = new THREE.SphereGeometry(globeRadius * (1 + CLOUDS_ALT), 32, 32)
       const cloudsMat = new THREE.MeshPhongMaterial({
         map: cloudsTexture,
         transparent: true,
@@ -174,12 +187,20 @@ const Globe3D = forwardRef<Globe3DRef, Globe3DProps & { disableTelemetry?: boole
       globe.scene().add(cloudsMesh)
 
       const rotateClouds = () => {
+        if (!isIntersectingRef.current) {
+          rotationAnimationFrameIdRef.current = null
+          return
+        }
         if (cloudsMesh) {
           cloudsMesh.rotation.y += (CLOUDS_ROTATION_SPEED * Math.PI) / 180
         }
-        rotationAnimationFrameId = requestAnimationFrame(rotateClouds)
+        rotationAnimationFrameIdRef.current = requestAnimationFrame(rotateClouds)
       }
-      rotateClouds()
+      rotateCloudsFnRef.current = rotateClouds
+
+      if (isIntersectingRef.current) {
+        rotateClouds()
+      }
     }, undefined, (err: any) => {
       console.error("Failed to load clouds texture:", err)
     })
@@ -226,15 +247,20 @@ const Globe3D = forwardRef<Globe3DRef, Globe3DProps & { disableTelemetry?: boole
       }
     })
 
-    // Load country boundary coordinates (GeoJSON) dynamically
-    fetch('https://raw.githubusercontent.com/vasturiano/react-globe.gl/master/example/datasets/ne_110m_admin_0_countries.geojson')
-      .then((res) => res.json())
-      .then((countries) => {
-        if (globeInstanceRef.current) {
-          globeInstanceRef.current.polygonsData(countries.features)
-        }
-      })
-      .catch((err) => console.error('Failed to load globe GeoJSON polygon data:', err))
+    // Load country boundary coordinates (GeoJSON) with cache
+    if (cachedCountriesGeoJson) {
+      globe.polygonsData(cachedCountriesGeoJson.features)
+    } else {
+      fetch('https://raw.githubusercontent.com/vasturiano/react-globe.gl/master/example/datasets/ne_110m_admin_0_countries.geojson')
+        .then((res) => res.json())
+        .then((countries) => {
+          cachedCountriesGeoJson = countries
+          if (globeInstanceRef.current) {
+            globeInstanceRef.current.polygonsData(countries.features)
+          }
+        })
+        .catch((err) => console.error('Failed to load globe GeoJSON polygon data:', err))
+    }
 
     // Handle resizing responsiveness
     const handleResize = () => {
@@ -247,13 +273,15 @@ const Globe3D = forwardRef<Globe3DRef, Globe3DProps & { disableTelemetry?: boole
 
     // Call once to size correctly
     setTimeout(handleResize, 100)
-    window.addEventListener('resize', handleResize)
+    window.addEventListener('resize', handleResize, { passive: true })
 
     return () => {
       window.removeEventListener('resize', handleResize)
-      if (rotationAnimationFrameId) {
-        cancelAnimationFrame(rotationAnimationFrameId)
+      if (rotationAnimationFrameIdRef.current) {
+        cancelAnimationFrame(rotationAnimationFrameIdRef.current)
+        rotationAnimationFrameIdRef.current = null
       }
+      rotateCloudsFnRef.current = null
       if (globeInstanceRef.current) {
         if (cloudsMesh) {
           try {
@@ -275,7 +303,7 @@ const Globe3D = forwardRef<Globe3DRef, Globe3DProps & { disableTelemetry?: boole
     }
   }, [disableRegionHover]) // Re-run if hover setting changes (rare, but safe)
 
-  // Intersection Observer to pause/resume WebGL rendering when offscreen
+  // Intersection Observer to pause/resume WebGL rendering and cloud rotation when offscreen
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
@@ -283,11 +311,20 @@ const Globe3D = forwardRef<Globe3DRef, Globe3DProps & { disableTelemetry?: boole
     const observer = new IntersectionObserver(
       ([entry]) => {
         const globe = globeInstanceRef.current
+        isIntersectingRef.current = entry.isIntersecting
         if (!globe) return
+
         if (entry.isIntersecting) {
           globe.resumeAnimation()
+          if (rotateCloudsFnRef.current && !rotationAnimationFrameIdRef.current) {
+            rotateCloudsFnRef.current()
+          }
         } else {
           globe.pauseAnimation()
+          if (rotationAnimationFrameIdRef.current) {
+            cancelAnimationFrame(rotationAnimationFrameIdRef.current)
+            rotationAnimationFrameIdRef.current = null
+          }
         }
       },
       { threshold: 0.05 }

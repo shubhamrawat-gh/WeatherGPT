@@ -66,7 +66,7 @@ export default function LandingPage() {
     }
 
     gsap.ticker.add(updateTicker)
-    gsap.ticker.lagSmoothing(0)
+    gsap.ticker.lagSmoothing(500, 33)
 
     ;(window as any).lenis = lenis
 
@@ -325,12 +325,10 @@ export default function LandingPage() {
           >
             <motion.div 
               variants={itemVariants} 
-              whileHover={{ scale: 1.08, y: -8 }}
-              animate={{ y: [0, -8, 0] }}
-              transition={{ repeat: Infinity, duration: 4, ease: "easeInOut", delay: 0 }}
-              className="flex flex-col items-center text-center gap-3 p-6 rounded-2xl border border-white/[0.04] bg-white/[0.01] backdrop-blur-md hover:border-brand-green/30 hover:bg-brand-green/[0.02] shadow-xl hover:shadow-brand-green/5 transition-all duration-300"
+              whileHover={{ scale: 1.05, y: -4 }}
+              className="flex flex-col items-center text-center gap-3 p-6 rounded-2xl border border-white/[0.04] bg-white/[0.01] backdrop-blur-md hover:border-brand-green/30 hover:bg-brand-green/[0.02] shadow-xl hover:shadow-brand-green/5 transition-all duration-300 motion-safe:animate-[float-subtle_4s_ease-in-out_infinite]"
             >
-              <div className="p-3 rounded-full bg-brand-green/10 border border-brand-green/20 text-brand-green animate-pulse">
+              <div className="p-3 rounded-full bg-brand-green/10 border border-brand-green/20 text-brand-green">
                 <Eye className="w-8 h-8" />
               </div>
               <span className="text-xl font-bold tracking-wide text-white">Real-Time Forecasts</span>
@@ -339,12 +337,10 @@ export default function LandingPage() {
 
             <motion.div 
               variants={itemVariants} 
-              whileHover={{ scale: 1.08, y: -8 }}
-              animate={{ y: [0, -8, 0] }}
-              transition={{ repeat: Infinity, duration: 4, ease: "easeInOut", delay: 1 }}
-              className="flex flex-col items-center text-center gap-3 p-6 rounded-2xl border border-white/[0.04] bg-white/[0.01] backdrop-blur-md hover:border-brand-green/30 hover:bg-brand-green/[0.02] shadow-xl hover:shadow-brand-green/5 transition-all duration-300"
+              whileHover={{ scale: 1.05, y: -4 }}
+              className="flex flex-col items-center text-center gap-3 p-6 rounded-2xl border border-white/[0.04] bg-white/[0.01] backdrop-blur-md hover:border-brand-green/30 hover:bg-brand-green/[0.02] shadow-xl hover:shadow-brand-green/5 transition-all duration-300 motion-safe:animate-[float-subtle_4s_ease-in-out_infinite_1s]"
             >
-              <div className="p-3 rounded-full bg-brand-green/10 border border-brand-green/20 text-brand-green animate-pulse">
+              <div className="p-3 rounded-full bg-brand-green/10 border border-brand-green/20 text-brand-green">
                 <MapPin className="w-8 h-8" />
               </div>
               <span className="text-xl font-bold tracking-wide text-white">Smart Alerts</span>
@@ -353,12 +349,10 @@ export default function LandingPage() {
 
             <motion.div 
               variants={itemVariants} 
-              whileHover={{ scale: 1.08, y: -8 }}
-              animate={{ y: [0, -8, 0] }}
-              transition={{ repeat: Infinity, duration: 4, ease: "easeInOut", delay: 2 }}
-              className="flex flex-col items-center text-center gap-3 p-6 rounded-2xl border border-white/[0.04] bg-white/[0.01] backdrop-blur-md hover:border-brand-green/30 hover:bg-brand-green/[0.02] shadow-xl hover:shadow-brand-green/5 transition-all duration-300"
+              whileHover={{ scale: 1.05, y: -4 }}
+              className="flex flex-col items-center text-center gap-3 p-6 rounded-2xl border border-white/[0.04] bg-white/[0.01] backdrop-blur-md hover:border-brand-green/30 hover:bg-brand-green/[0.02] shadow-xl hover:shadow-brand-green/5 transition-all duration-300 motion-safe:animate-[float-subtle_4s_ease-in-out_infinite_2s]"
             >
-              <div className="p-3 rounded-full bg-brand-green/10 border border-brand-green/20 text-brand-green animate-pulse">
+              <div className="p-3 rounded-full bg-brand-green/10 border border-brand-green/20 text-brand-green">
                 <Activity className="w-8 h-8" />
               </div>
               <span className="text-xl font-bold tracking-wide text-white">Climate Analytics</span>
@@ -367,12 +361,10 @@ export default function LandingPage() {
 
             <motion.div 
               variants={itemVariants} 
-              whileHover={{ scale: 1.08, y: -8 }}
-              animate={{ y: [0, -8, 0] }}
-              transition={{ repeat: Infinity, duration: 4, ease: "easeInOut", delay: 3 }}
-              className="flex flex-col items-center text-center gap-3 p-6 rounded-2xl border border-white/[0.04] bg-white/[0.01] backdrop-blur-md hover:border-brand-green/30 hover:bg-brand-green/[0.02] shadow-xl hover:shadow-brand-green/5 transition-all duration-300"
+              whileHover={{ scale: 1.05, y: -4 }}
+              className="flex flex-col items-center text-center gap-3 p-6 rounded-2xl border border-white/[0.04] bg-white/[0.01] backdrop-blur-md hover:border-brand-green/30 hover:bg-brand-green/[0.02] shadow-xl hover:shadow-brand-green/5 transition-all duration-300 motion-safe:animate-[float-subtle_4s_ease-in-out_infinite_3s]"
             >
-              <div className="p-3 rounded-full bg-brand-green/10 border border-brand-green/20 text-brand-green animate-pulse">
+              <div className="p-3 rounded-full bg-brand-green/10 border border-brand-green/20 text-brand-green">
                 <Shield className="w-8 h-8" />
               </div>
               <span className="text-xl font-bold tracking-wide text-white">Conversational AI</span>
@@ -382,7 +374,7 @@ export default function LandingPage() {
         </section>
 
         {/* 2. FEATURES SECTION */}
-        <section id="features" className="py-24 border-t border-hairline-dark/30 bg-surface-dark/10 relative z-10 px-6">
+        <section id="features" className="py-24 border-t border-hairline-dark/30 bg-surface-dark/10 relative z-10 px-6" style={{ contentVisibility: 'auto', containIntrinsicSize: '0 600px' }}>
           <div className="max-w-7xl mx-auto">
             <motion.div 
               initial="hidden"
@@ -853,7 +845,7 @@ export default function LandingPage() {
 
 
         {/* 4. CTA SECTION */}
-        <section id="contact" className="h-screen min-h-[600px] relative flex items-center justify-center overflow-hidden border-t border-hairline-dark/30 bg-radial-[circle_at_50%_50%] from-brand-teal-deep/30 via-canvas-dark to-canvas-dark px-6">
+        <section id="contact" className="h-screen min-h-[600px] relative flex items-center justify-center overflow-hidden border-t border-hairline-dark/30 bg-radial-[circle_at_50%_50%] from-brand-teal-deep/30 via-canvas-dark to-canvas-dark px-6" style={{ contentVisibility: 'auto', containIntrinsicSize: '0 800px' }}>
           {/* Interactive Magnetic Lines Background */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.25] z-0">
             <MagnetLines

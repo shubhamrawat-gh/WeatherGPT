@@ -33,6 +33,7 @@ export interface WeatherChatMessage {
   id: string
   sender: 'user' | 'assistant'
   text: string
+  thinking?: string
   timestamp: string
   dataSnippet?: {
     type: 'forecast' | 'alert' | 'agro' | 'trend'

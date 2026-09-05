@@ -83,14 +83,20 @@ export default function MagnetLines({
 
     const items = container.querySelectorAll<HTMLSpanElement>('span')
 
-    const onPointerMove = (e: { pageX: number; pageY: number }) => {
-      const pointerX = e.pageX
-      const pointerY = e.pageY
+    let rafId: number | null = null
+    let latestPointer: { pageX: number; pageY: number } | null = null
+
+    const processPointerMove = () => {
+      rafId = null
+      if (!latestPointer) return
+      const pointerX = latestPointer.pageX
+      const pointerY = latestPointer.pageY
       const coords = coordsRef.current
 
       if (coords.length !== items.length) return
 
-      items.forEach((item, idx) => {
+      for (let idx = 0; idx < items.length; idx++) {
+        const item = items[idx]
         const { x: centerX, y: centerY } = coords[idx]
 
         const b = pointerX - centerX
@@ -99,24 +105,31 @@ export default function MagnetLines({
         const r =
           ((Math.acos(b / c) * 180) / Math.PI) * (pointerY > centerY ? 1 : -1)
 
-        item.style.setProperty('--rotate', `${r}deg`)
-      })
+        item.style.setProperty('--rotate', `${r.toFixed(1)}deg`)
+      }
     }
 
     const handlePointerMove = (e: PointerEvent) => {
-      onPointerMove({ pageX: e.pageX, pageY: e.pageY })
+      latestPointer = { pageX: e.pageX, pageY: e.pageY }
+      if (!rafId) {
+        rafId = requestAnimationFrame(processPointerMove)
+      }
     }
 
-    window.addEventListener('pointermove', handlePointerMove)
+    window.addEventListener('pointermove', handlePointerMove, { passive: true })
 
     if (items.length && coordsRef.current.length === items.length) {
       const middleIndex = Math.floor(items.length / 2)
       const centerCoord = coordsRef.current[middleIndex]
-      onPointerMove({ pageX: centerCoord.x, pageY: centerCoord.y })
+      latestPointer = { pageX: centerCoord.x, pageY: centerCoord.y }
+      processPointerMove()
     }
 
     return () => {
       window.removeEventListener('pointermove', handlePointerMove)
+      if (rafId) {
+        cancelAnimationFrame(rafId)
+      }
     }
   }, [isVisible, rows, columns])
 

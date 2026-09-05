@@ -50,39 +50,39 @@ export default function AlertsPage() {
         description="Active severe weather advisories, cyclonic storm warnings, and flood alerts across India."
       />
 
-      <div className="flex flex-col h-full w-full bg-[#0a0e14] text-slate-200">
+      <div className="flex flex-col h-full w-full dark:bg-[#0a0e14] bg-[#f8fafc] dark:text-slate-200 text-slate-800">
         {/* Page Topbar Header */}
-        <div className="h-12 border-b border-[#1c2333] px-6 flex items-center justify-between shrink-0 bg-[#0f141c]/60">
+        <div className="h-12 border-b dark:border-white/[0.08] border-slate-200 px-6 flex items-center justify-between shrink-0 dark:bg-[#0a0a0a] bg-white">
           <div className="flex items-center gap-3">
             <ShieldAlert className="w-4 h-4 text-red-400" />
-            <h1 className="text-xs font-semibold text-white tracking-wide">
+            <h1 className="text-xs font-semibold dark:text-white text-slate-900 tracking-wide">
               Active Severe Weather Bulletins
             </h1>
-            <span className="text-[10px] font-mono text-slate-500 border-l border-[#1c2333] pl-3">
+            <span className="text-[10px] font-mono dark:text-slate-500 text-slate-600 border-l dark:border-white/[0.08] border-slate-200 pl-3">
               Total {filteredAlerts.length} Active
             </span>
           </div>
 
           <div className="flex items-center gap-2 text-[11px] font-mono">
             <span className="text-red-400">{stats.extreme} Extreme</span>
-            <span className="text-slate-600">·</span>
+            <span className="dark:text-slate-600 text-slate-400">·</span>
             <span className="text-orange-400">{stats.severe} Severe</span>
-            <span className="text-slate-600">·</span>
+            <span className="dark:text-slate-600 text-slate-400">·</span>
             <span className="text-amber-400">{stats.moderate} Moderate</span>
           </div>
         </div>
 
         {/* Filter and Search Bar */}
-        <div className="p-4 border-b border-[#1c2333] bg-[#0f141c]/30 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="p-4 border-b dark:border-white/[0.08] border-slate-200 dark:bg-[#0a0a0a]/40 bg-white flex flex-col sm:flex-row items-center justify-between gap-3">
           {/* Search Box */}
           <div className="relative w-full sm:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 dark:text-slate-500 text-slate-400" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by state, district, or hazard..."
-              className="w-full h-8 pl-9 pr-3 rounded-md bg-[#0a0e14] border border-[#1c2333] text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-brand-green transition-colors"
+              className="w-full h-8 pl-9 pr-3 rounded-lg dark:bg-[#121212] bg-slate-50 border dark:border-white/[0.08] border-slate-200 text-xs dark:text-white text-slate-900 dark:placeholder:text-slate-500 placeholder:text-slate-400 focus:outline-none focus:border-brand-green transition-colors"
             />
           </div>
 
@@ -94,8 +94,8 @@ export default function AlertsPage() {
                 onClick={() => setSeverityFilter(sev)}
                 className={`px-3 py-1 rounded-md text-[11px] font-mono font-medium transition-colors cursor-pointer ${
                   severityFilter === sev
-                    ? 'bg-white/[0.08] text-white border border-slate-600'
-                    : 'text-slate-400 hover:text-slate-200 border border-transparent'
+                    ? 'dark:bg-white/[0.12] bg-slate-200 dark:text-white text-slate-900 border dark:border-slate-600 border-slate-300'
+                    : 'dark:text-slate-400 text-slate-600 hover:text-slate-900 dark:hover:text-slate-200 border border-transparent'
                 }`}
               >
                 {sev}
@@ -109,15 +109,15 @@ export default function AlertsPage() {
           <div className="max-w-4xl mx-auto flex flex-col gap-4">
             {filteredAlerts.length === 0 ? (
               <div className="py-16 text-center flex flex-col items-center">
-                <Info className="w-8 h-8 text-slate-500 mb-2" />
-                <h3 className="text-sm font-semibold text-white">No bulletins match current filters</h3>
-                <p className="text-xs text-slate-400 mt-1">Try selecting a different severity tier or clear your search.</p>
+                <Info className="w-8 h-8 text-slate-400 mb-2" />
+                <h3 className="text-sm font-semibold dark:text-white text-slate-900">No bulletins match current filters</h3>
+                <p className="text-xs dark:text-slate-400 text-slate-600 mt-1">Try selecting a different severity tier or clear your search.</p>
               </div>
             ) : (
               filteredAlerts.map((alert) => (
                 <article
                   key={alert.id}
-                  className="p-5 rounded-lg bg-[#0f141c] border border-[#1c2333] hover:border-slate-700 transition-colors flex flex-col gap-3.5"
+                  className="p-5 rounded-xl dark:bg-[#121212] bg-white border dark:border-white/[0.08] border-slate-200 dark:hover:border-slate-700 hover:border-slate-300 transition-colors flex flex-col gap-3.5 shadow-xs"
                 >
                   {/* Top line: Severity badge, category, timestamp */}
                   <div className="flex flex-wrap items-center justify-between gap-2">
@@ -142,7 +142,7 @@ export default function AlertsPage() {
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-500">
+                    <div className="flex items-center gap-1.5 text-[10px] font-mono dark:text-slate-500 text-slate-600">
                       <Clock className="w-3 h-3" />
                       <span>Issued: {alert.issuedAt} · Valid: {alert.validUntil}</span>
                     </div>
@@ -150,29 +150,29 @@ export default function AlertsPage() {
 
                   {/* Title & Region */}
                   <div>
-                    <h2 className="text-sm font-semibold text-white tracking-tight leading-snug">
+                    <h2 className="text-sm font-semibold dark:text-white text-slate-900 tracking-tight leading-snug">
                       {alert.title}
                     </h2>
-                    <div className="flex items-center gap-1.5 text-xs text-slate-400 mt-1 font-sans">
-                      <MapPin className="w-3.5 h-3.5 text-slate-500" />
+                    <div className="flex items-center gap-1.5 text-xs dark:text-slate-400 text-slate-600 mt-1 font-sans">
+                      <MapPin className="w-3.5 h-3.5 dark:text-slate-500 text-slate-400" />
                       <span>{alert.region} ({alert.state})</span>
                     </div>
                   </div>
 
                   {/* Description */}
-                  <p className="text-xs text-slate-300 font-sans leading-relaxed">
+                  <p className="text-xs dark:text-slate-300 text-slate-700 font-sans leading-relaxed">
                     {alert.description}
                   </p>
 
                   {/* Affected Districts */}
                   <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                    <span className="text-[10px] font-mono text-slate-500 uppercase mr-1">
+                    <span className="text-[10px] font-mono dark:text-slate-500 text-slate-600 uppercase mr-1">
                       Districts:
                     </span>
                     {alert.affectedDistricts.map((district, i) => (
                       <span
                         key={i}
-                        className="px-2 py-0.5 rounded bg-[#151b26] border border-[#1c2333] text-[10px] font-mono text-slate-300"
+                        className="px-2 py-0.5 rounded dark:bg-[#151b26] bg-slate-100 border dark:border-white/[0.08] border-slate-200 text-[10px] font-mono dark:text-slate-300 text-slate-700"
                       >
                         {district}
                       </span>

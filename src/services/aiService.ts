@@ -3,7 +3,7 @@
  * Powered by OpenRouter API with Multi-Lingual & Regional Intelligence and Guardrails
  */
 
-const OPENROUTER_API_KEY = (import.meta.env.VITE_OPENROUTER_API_KEY || '').trim()
+const OPENROUTER_API_KEY = (import.meta.env?.VITE_OPENROUTER_API_KEY || '').trim()
 
 const OPENROUTER_ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions'
 
@@ -65,7 +65,7 @@ const WEATHER_INTENT_KEYWORDS = [
   'weather', 'rain', 'rainfall', 'precipitation', 'temperature', 'forecast', 'monsoon', 'climate',
   'cyclone', 'storm', 'flood', 'flooding', 'heatwave', 'coldwave', 'wind', 'humidity', 'cloud',
   'snow', 'fog', 'drought', 'crop', 'farming', 'farmer', 'sow', 'sowing', 'irrigate', 'irrigation',
-  'agriculture', 'paddy', 'wheat', 'disaster', 'landslide', 'radar', 'satellite', 'imd', 'uv',
+  'agriculture', 'paddy', 'wheat', 'disaster', 'landslide', 'earthquake', 'earthquakes', 'quake', 'quakes', 'tremor', 'seismic', 'richter', 'radar', 'satellite', 'imd', 'uv',
   'hazard', 'celsius', 'fahrenheit', 'advisory', 'air quality', 'aqi', 'hot', 'cold', 'thunder',
   'lightning', 'hail', 'gust', 'swell', 'tide', 'barometer', 'pressure', 'atmospheric', 'kharif',
   'rabi', 'soil', 'season', 'autumn', 'winter', 'spring', 'summer',
@@ -83,7 +83,7 @@ const WEATHER_INTENT_KEYWORDS = [
   // Hindi / Marathi (Devanagari)
   'मौसम', 'बारिश', 'वर्षा', 'तापमान', 'हवामान', 'पाऊस', 'चक्रीवादळ', 'चक्रवात', 'पूर', 'दुष्काळ',
   'अंदाज', 'शेती', 'पीक', 'खरीप', 'रबी', 'सिंचाई', 'विजा', 'वारा', 'थंडी', 'ऊन', 'बाष्प', 'धुके',
-  'भूस्खलन', 'गारपीट', 'मान्सून', 'उष्णता', 'लाट', 'मेघगर्जना', 'पाऊसपाणी',
+  'भूस्खलन', 'भूकंप', 'भूचाल', 'गारपीट', 'मान्सून', 'उष्णता', 'लाट', 'मेघगर्जना', 'पाऊसपाणी',
 
   // Bengali
   'আবহাওয়া', 'বৃষ্টি', 'বৃষ্টিপাত', 'তাপমাত্রা', 'ঘূর্ণিঝড়', 'বন্যা', 'কৃষি', 'ফসল', 'খরিফ', 'মেঘ',
@@ -124,6 +124,7 @@ export interface ChatMessageParam {
 
 export interface AIResponse {
   text: string
+  thinking?: string
   modelUsed: string
   source: 'openrouter' | 'guardrail' | 'offline_fallback'
   isGuardrailBlocked?: boolean
@@ -185,32 +186,69 @@ export function evaluateWeatherGuardrails(
   }
 }
 
-export function stripThinkingProcess(rawText: string): string {
-  if (!rawText) return ''
-  let text = rawText
+/**
+ * Robustly isolates model reasoning/thinking from final response content.
+ * Handles dedicated API fields (message.reasoning), closed tags (<think>...</think>),
+ * unclosed tags (<think>... upon token cutoff), and natural-language preambles.
+ */
+export function extractThinkingAndResponse(
+  rawContent: string,
+  apiReasoning?: string
+): { text: string; thinking?: string } {
+  let thinking = apiReasoning ? apiReasoning.trim() : ''
+  let text = rawContent ? rawContent.trim() : ''
 
-  // 1. Strip explicit <think>...</think> or <thought>...</thought> tags
-  text = text.replace(/<think>[\s\S]*?<\/think>/gi, '')
-  text = text.replace(/<thought>[\s\S]*?<\/thought>/gi, '')
-
-  // 2. Strip "Here's a thinking process:" or similar blocks up to the actual output
-  const thinkingPreambleRegex = /^(Here'?s a thinking process:?|Thinking Process:?|Thought Process:?)[\s\S]*?(?=(\n#{1,4}\s|\n\*\*|\n---|\n\n[#A-Z\u0900-\u097F]))/i
-  if (thinkingPreambleRegex.test(text.trim())) {
-    const cleaned = text.trim().replace(thinkingPreambleRegex, '').trim()
-    if (cleaned.length > 20) {
-      text = cleaned
+  // 1. Extract closed <think> or <thought> tags
+  const thinkTagRegex = /<(think|thought)>([\s\S]*?)<\/\1>/i
+  const match = text.match(thinkTagRegex)
+  if (match) {
+    if (!thinking) {
+      thinking = match[2].trim()
     }
-  } else if (/^Here'?s a thinking process/i.test(text.trim())) {
-    const match = text.search(/\n(#{1,4}\s|---)/)
-    if (match !== -1) {
-      text = text.slice(match).trim()
+    text = text.replace(/<(think|thought)>[\s\S]*?<\/\1>/gi, '').trim()
+  }
+
+  // 2. Extract unclosed <think> or <thought> tags (when truncated by token limit)
+  const unclosedMatch = text.match(/^<(think|thought)>([\s\S]*)$/i)
+  if (unclosedMatch) {
+    if (!thinking) {
+      thinking = unclosedMatch[2].trim()
+    }
+    text = ''
+  }
+
+  // 3. Extract conversational preambles ("Here is a thinking process:", "Thinking Process:", etc.)
+  const preambleRegex = /^(Here(?:'s|\s+is)?\s+a\s+thinking\s+process:?|Thinking\s+Process:?|Thought\s+Process:?|Reasoning:?)[\s\S]*?(?=(\n#{1,4}\s|\n\*\*|\n---|\n(?:Final\s+)?Answer:\s*|\n\n[#A-Z\u0900-\u097F]))/i
+  const preambleMatch = text.match(preambleRegex)
+  if (preambleMatch) {
+    if (!thinking) {
+      thinking = preambleMatch[0].trim()
+    }
+    text = text.replace(preambleRegex, '').trim()
+  } else if (/^Here(?:'s|\s+is)?\s+(?:a\s+)?thinking/i.test(text)) {
+    const dividerMatch = text.search(/\n(#{1,4}\s|---|(?:\*\*|Final\s+)?Answer:?)/i)
+    if (dividerMatch !== -1) {
+      if (!thinking) {
+        thinking = text.slice(0, dividerMatch).trim()
+      }
+      text = text.slice(dividerMatch).trim()
     }
   }
 
-  // 3. Remove any leading --- separators left behind
+  // Clean any leading "Final Answer:" or "Answer:" label
+  text = text.replace(/^(?:(?:\*\*)?(?:Final\s+)?Answer:?(?:\*\*)?\s*)/i, '').trim()
+
+  // 4. Remove leftover markdown separators
   text = text.replace(/^(\s*---\s*\n)+/g, '').trim()
 
-  return text
+  return {
+    text,
+    thinking: thinking || undefined,
+  }
+}
+
+export function stripThinkingProcess(rawText: string): string {
+  return extractThinkingAndResponse(rawText).text
 }
 
 /**
@@ -255,8 +293,8 @@ export async function generateWeatherResponse(
   if (OPENROUTER_API_KEY) {
     const modelsToTry = [
       'openrouter/free',
-      'google/gemini-2.0-flash-exp:free',
-      'meta-llama/llama-3.3-70b-instruct:free',
+      'minimax/minimax-m2.7:free',
+      'google/gemma-4-31b-it:free',
     ]
 
     const messages: ChatMessageParam[] = [
@@ -279,17 +317,23 @@ export async function generateWeatherResponse(
             model,
             messages,
             temperature: 0.6,
-            max_tokens: 750,
+            max_tokens: 2500,
           }),
         })
 
         if (response.ok) {
           const data = await response.json()
-          const rawContent = data?.choices?.[0]?.message?.content
-          if (rawContent && rawContent.trim().length > 0) {
-            const cleanedText = stripThinkingProcess(rawContent.trim())
+          const message = data?.choices?.[0]?.message
+          const rawContent = message?.content || ''
+          const apiReasoning = message?.reasoning || message?.reasoning_content || ''
+
+          if (rawContent.trim().length > 0 || apiReasoning.trim().length > 0) {
+            const extracted = extractThinkingAndResponse(rawContent, apiReasoning)
+            // If the model exhausted tokens only thinking and text is empty, generate an authoritative fallback response
+            const finalText = extracted.text.trim() || getOfflineFallbackResponse(userPrompt, activeLang.code)
             return {
-              text: cleanedText,
+              text: finalText,
+              thinking: extracted.thinking,
               modelUsed: data?.model || model,
               source: 'openrouter',
             }

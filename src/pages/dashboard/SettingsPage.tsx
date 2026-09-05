@@ -1,13 +1,21 @@
 import { useState } from 'react'
 import SEO from '../../components/SEO'
-import { Settings, Check, Radio, Bell, Globe2, Save } from 'lucide-react'
+import { Settings, Check, Radio, Bell, Globe2, Save, Sun, Moon, Mic } from 'lucide-react'
+import { useTheme } from '../../context/ThemeContext'
 
 export default function SettingsPage() {
+  const { theme, isDark, setTheme } = useTheme()
   const [tempUnit, setTempUnit] = useState<'celsius' | 'fahrenheit'>('celsius')
   const [rainUnit, setRainUnit] = useState<'mm' | 'inches'>('mm')
   const [windUnit, setWindUnit] = useState<'kmh' | 'knots' | 'ms'>('kmh')
   const [syncFreq, setSyncFreq] = useState<'15' | '30' | '60'>('15')
   const [saved, setSaved] = useState(false)
+  const [voiceRelayUrl, setVoiceRelayUrl] = useState(() =>
+    typeof window !== 'undefined' ? localStorage.getItem('weathergpt_voice_relay_url') || '' : ''
+  )
+  const [voiceModePref, setVoiceModePref] = useState<'auto' | 'browser' | 'relay'>(() =>
+    typeof window !== 'undefined' ? (localStorage.getItem('weathergpt_voice_preferred_mode') as any) || 'auto' : 'auto'
+  )
 
   const [alertThresholds, setAlertThresholds] = useState({
     extreme: true,
@@ -18,6 +26,10 @@ export default function SettingsPage() {
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault()
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('weathergpt_voice_relay_url', voiceRelayUrl.trim())
+      localStorage.setItem('weathergpt_voice_preferred_mode', voiceModePref)
+    }
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
@@ -29,12 +41,12 @@ export default function SettingsPage() {
         description="Configure unit preferences, alert dispatch thresholds, and meteorological API connections."
       />
 
-      <div className="flex flex-col h-full w-full bg-[#0a0e14] text-slate-200">
+      <div className="flex flex-col h-full w-full dark:bg-[#0a0a0a] bg-[#f8fafc] dark:text-slate-200 text-slate-800">
         {/* Header */}
-        <div className="h-12 border-b border-[#1c2333] px-6 flex items-center justify-between shrink-0 bg-[#0f141c]/60">
+        <div className="h-12 border-b dark:border-white/[0.08] border-slate-200 px-6 flex items-center justify-between shrink-0 dark:bg-[#0a0a0a] bg-white">
           <div className="flex items-center gap-3">
             <Settings className="w-4 h-4 text-brand-green" />
-            <h1 className="text-xs font-semibold text-white tracking-wide">
+            <h1 className="text-xs font-semibold dark:text-white text-slate-900 tracking-wide">
               Console &amp; Telemetry Settings
             </h1>
           </div>
@@ -44,9 +56,70 @@ export default function SettingsPage() {
         <div className="flex-1 overflow-y-auto p-4 md:p-8">
           <form onSubmit={handleSave} className="max-w-2xl mx-auto flex flex-col gap-6">
             
+            {/* Theme & Visual Appearance */}
+            <div className="p-5 rounded-xl dark:bg-[#121212] bg-white border dark:border-white/[0.08] border-slate-200 flex flex-col gap-4 shadow-xs">
+              <div className="flex items-center gap-2 dark:text-white text-slate-900 font-semibold text-xs tracking-tight">
+                {isDark ? <Moon className="w-4 h-4 text-brand-green" /> : <Sun className="w-4 h-4 text-brand-green" />}
+                <span>Theme &amp; Visual Appearance</span>
+              </div>
+              <p className="text-xs dark:text-slate-400 text-slate-600">
+                Choose between high-contrast dark operations console, clean daylight mode, or automatic system sync.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setTheme('dark')}
+                  className={`p-3 rounded-lg border flex items-center gap-2.5 transition-all cursor-pointer ${
+                    theme === 'dark'
+                      ? 'border-brand-green bg-brand-green/10 dark:text-white text-slate-900 font-medium shadow-xs'
+                      : 'dark:border-white/[0.08] border-slate-200 dark:bg-[#0a0a0a] bg-slate-50 dark:text-slate-400 text-slate-600 dark:hover:text-white hover:text-slate-900 dark:hover:border-white/[0.2] hover:border-slate-300'
+                  }`}
+                >
+                  <Moon className="w-4 h-4 text-brand-green shrink-0" />
+                  <div className="flex flex-col text-left">
+                    <span className="font-semibold text-xs dark:text-white text-slate-900">Dark Mode</span>
+                    <span className="text-[10px] dark:text-slate-400 text-slate-500">Tactical Night Console</span>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setTheme('light')}
+                  className={`p-3 rounded-lg border flex items-center gap-2.5 transition-all cursor-pointer ${
+                    theme === 'light'
+                      ? 'border-brand-green bg-brand-green/10 dark:text-white text-slate-900 font-medium shadow-xs'
+                      : 'dark:border-white/[0.08] border-slate-200 dark:bg-[#0a0a0a] bg-slate-50 dark:text-slate-400 text-slate-600 dark:hover:text-white hover:text-slate-900 dark:hover:border-white/[0.2] hover:border-slate-300'
+                  }`}
+                >
+                  <Sun className="w-4 h-4 text-brand-green shrink-0" />
+                  <div className="flex flex-col text-left">
+                    <span className="font-semibold text-xs dark:text-white text-slate-900">Light Mode</span>
+                    <span className="text-[10px] dark:text-slate-400 text-slate-500">Daylight High Visibility</span>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setTheme('auto')}
+                  className={`p-3 rounded-lg border flex items-center gap-2.5 transition-all cursor-pointer ${
+                    theme === 'auto'
+                      ? 'border-brand-green bg-brand-green/10 dark:text-white text-slate-900 font-medium shadow-xs'
+                      : 'dark:border-white/[0.08] border-slate-200 dark:bg-[#0a0a0a] bg-slate-50 dark:text-slate-400 text-slate-600 dark:hover:text-white hover:text-slate-900 dark:hover:border-white/[0.2] hover:border-slate-300'
+                  }`}
+                >
+                  <Radio className="w-4 h-4 text-brand-green shrink-0" />
+                  <div className="flex flex-col text-left">
+                    <span className="font-semibold text-xs dark:text-white text-slate-900">System Sync</span>
+                    <span className="text-[10px] dark:text-slate-400 text-slate-500">Auto OS Detection</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+
             {/* Display & Measurement Units */}
-            <div className="p-5 rounded-lg bg-[#0f141c] border border-[#1c2333] flex flex-col gap-4">
-              <div className="flex items-center gap-2 text-white font-semibold text-xs tracking-tight">
+            <div className="p-5 rounded-xl dark:bg-[#121212] bg-white border dark:border-white/[0.08] border-slate-200 flex flex-col gap-4 shadow-xs">
+              <div className="flex items-center gap-2 dark:text-white text-slate-900 font-semibold text-xs tracking-tight">
                 <Globe2 className="w-4 h-4 text-brand-green" />
                 <span>Measurement &amp; Unit Preferences</span>
               </div>
@@ -54,13 +127,13 @@ export default function SettingsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
                 {/* Temperature */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-mono uppercase text-slate-400">
+                  <label className="text-[10px] font-mono uppercase dark:text-slate-400 text-slate-500">
                     Temperature Unit
                   </label>
                   <select
                     value={tempUnit}
                     onChange={(e) => setTempUnit(e.target.value as any)}
-                    className="h-8 px-2.5 rounded bg-[#0a0e14] border border-[#1c2333] text-xs text-white focus:outline-none focus:border-brand-green"
+                    className="h-8 px-2.5 rounded-lg dark:bg-[#0a0a0a] bg-slate-50 border dark:border-white/[0.08] border-slate-200 text-xs dark:text-white text-slate-900 focus:outline-none focus:border-brand-green"
                   >
                     <option value="celsius">Celsius (°C)</option>
                     <option value="fahrenheit">Fahrenheit (°F)</option>
@@ -69,13 +142,13 @@ export default function SettingsPage() {
 
                 {/* Rainfall */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-mono uppercase text-slate-400">
+                  <label className="text-[10px] font-mono uppercase dark:text-slate-400 text-slate-500">
                     Rainfall Unit
                   </label>
                   <select
                     value={rainUnit}
                     onChange={(e) => setRainUnit(e.target.value as any)}
-                    className="h-8 px-2.5 rounded bg-[#0a0e14] border border-[#1c2333] text-xs text-white focus:outline-none focus:border-brand-green"
+                    className="h-8 px-2.5 rounded-lg dark:bg-[#0a0a0a] bg-slate-50 border dark:border-white/[0.08] border-slate-200 text-xs dark:text-white text-slate-900 focus:outline-none focus:border-brand-green"
                   >
                     <option value="mm">Millimeters (mm)</option>
                     <option value="inches">Inches (in)</option>
@@ -84,13 +157,13 @@ export default function SettingsPage() {
 
                 {/* Wind */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-mono uppercase text-slate-400">
+                  <label className="text-[10px] font-mono uppercase dark:text-slate-400 text-slate-500">
                     Wind Speed Unit
                   </label>
                   <select
                     value={windUnit}
                     onChange={(e) => setWindUnit(e.target.value as any)}
-                    className="h-8 px-2.5 rounded bg-[#0a0e14] border border-[#1c2333] text-xs text-white focus:outline-none focus:border-brand-green"
+                    className="h-8 px-2.5 rounded-lg dark:bg-[#0a0a0a] bg-slate-50 border dark:border-white/[0.08] border-slate-200 text-xs dark:text-white text-slate-900 focus:outline-none focus:border-brand-green"
                   >
                     <option value="kmh">Kilometers/hour (km/h)</option>
                     <option value="knots">Knots (kts)</option>
@@ -101,12 +174,12 @@ export default function SettingsPage() {
             </div>
 
             {/* Alert Severity Subscriptions */}
-            <div className="p-5 rounded-lg bg-[#0f141c] border border-[#1c2333] flex flex-col gap-4">
-              <div className="flex items-center gap-2 text-white font-semibold text-xs tracking-tight">
+            <div className="p-5 rounded-xl dark:bg-[#121212] bg-white border dark:border-white/[0.08] border-slate-200 flex flex-col gap-4 shadow-xs">
+              <div className="flex items-center gap-2 dark:text-white text-slate-900 font-semibold text-xs tracking-tight">
                 <Bell className="w-4 h-4 text-red-400" />
                 <span>Severe Weather Alert Subscriptions</span>
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs dark:text-slate-400 text-slate-600">
                 Configure which notification severity tiers will trigger emergency bulletin broadcasts.
               </p>
 
@@ -116,9 +189,9 @@ export default function SettingsPage() {
                     type="checkbox"
                     checked={alertThresholds.extreme}
                     onChange={(e) => setAlertThresholds({ ...alertThresholds, extreme: e.target.checked })}
-                    className="w-4 h-4 rounded bg-[#0a0e14] border border-[#1c2333] text-brand-green focus:ring-0"
+                    className="w-4 h-4 rounded dark:bg-[#0a0a0a] bg-slate-100 border dark:border-white/[0.08] border-slate-300 text-brand-green focus:ring-0"
                   />
-                  <span className="text-slate-200">
+                  <span className="dark:text-slate-200 text-slate-800">
                     <strong className="text-red-400 font-mono">[EXTREME]</strong> Cyclones, major floods, cloudbursts
                   </span>
                 </label>
@@ -128,9 +201,9 @@ export default function SettingsPage() {
                     type="checkbox"
                     checked={alertThresholds.severe}
                     onChange={(e) => setAlertThresholds({ ...alertThresholds, severe: e.target.checked })}
-                    className="w-4 h-4 rounded bg-[#0a0e14] border border-[#1c2333] text-brand-green focus:ring-0"
+                    className="w-4 h-4 rounded dark:bg-[#0a0a0a] bg-slate-100 border dark:border-white/[0.08] border-slate-300 text-brand-green focus:ring-0"
                   />
-                  <span className="text-slate-200">
+                  <span className="dark:text-slate-200 text-slate-800">
                     <strong className="text-orange-400 font-mono">[SEVERE]</strong> Heavy torrential rain, severe heatwave
                   </span>
                 </label>
@@ -140,9 +213,9 @@ export default function SettingsPage() {
                     type="checkbox"
                     checked={alertThresholds.moderate}
                     onChange={(e) => setAlertThresholds({ ...alertThresholds, moderate: e.target.checked })}
-                    className="w-4 h-4 rounded bg-[#0a0e14] border border-[#1c2333] text-brand-green focus:ring-0"
+                    className="w-4 h-4 rounded dark:bg-[#0a0a0a] bg-slate-100 border dark:border-white/[0.08] border-slate-300 text-brand-green focus:ring-0"
                   />
-                  <span className="text-slate-200">
+                  <span className="dark:text-slate-200 text-slate-800">
                     <strong className="text-amber-400 font-mono">[MODERATE]</strong> Thunderstorms, gusty winds, localized landslides
                   </span>
                 </label>
@@ -152,28 +225,82 @@ export default function SettingsPage() {
                     type="checkbox"
                     checked={alertThresholds.minor}
                     onChange={(e) => setAlertThresholds({ ...alertThresholds, minor: e.target.checked })}
-                    className="w-4 h-4 rounded bg-[#0a0e14] border border-[#1c2333] text-brand-green focus:ring-0"
+                    className="w-4 h-4 rounded dark:bg-[#0a0a0a] bg-slate-100 border dark:border-white/[0.08] border-slate-300 text-brand-green focus:ring-0"
                   />
-                  <span className="text-slate-200">
+                  <span className="dark:text-slate-200 text-slate-800">
                     <strong className="text-slate-400 font-mono">[MINOR]</strong> Moderate swell waves, light showers
                   </span>
                 </label>
               </div>
             </div>
 
-            {/* Data Ingestion & Feed Endpoints */}
-            <div className="p-5 rounded-lg bg-[#0f141c] border border-[#1c2333] flex flex-col gap-3">
+            {/* Voice Assistant & Live Relay Configuration */}
+            <div className="p-5 rounded-xl dark:bg-[#121212] bg-white border dark:border-white/[0.08] border-slate-200 flex flex-col gap-4 shadow-xs">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-white font-semibold text-xs tracking-tight">
+                <div className="flex items-center gap-2 dark:text-white text-slate-900 font-semibold text-xs tracking-tight">
+                  <Mic className="w-4 h-4 text-brand-green" />
+                  <span>Voice AI Engine &amp; Relay Endpoint</span>
+                </div>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-brand-green/10 text-brand-green border border-brand-green/20">
+                  DUAL-MODE READY
+                </span>
+              </div>
+              <p className="text-xs dark:text-slate-400 text-slate-600 leading-relaxed">
+                Choose between serverless client-side Web Voice (runs anywhere without a backend) or high-fidelity Gemini Live bi-directional audio streaming via WebSocket relay.
+              </p>
+
+              <div className="flex flex-col gap-3 text-xs">
+                {/* Mode selection */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-mono uppercase dark:text-slate-400 text-slate-500">
+                    Voice Operation Mode
+                  </label>
+                  <select
+                    value={voiceModePref}
+                    onChange={(e) => setVoiceModePref(e.target.value as any)}
+                    className="h-8 px-2.5 rounded-lg dark:bg-[#0a0a0a] bg-slate-50 border dark:border-white/[0.08] border-slate-200 text-xs dark:text-white text-slate-900 focus:outline-none focus:border-brand-green"
+                  >
+                    <option value="auto">Auto (Gemini Live Relay with Web Speech AI fallback)</option>
+                    <option value="browser">Browser Web Voice AI (Client-side, zero backend needed)</option>
+                    <option value="relay">Gemini Live WebSocket Relay (Requires hosted server)</option>
+                  </select>
+                </div>
+
+                {/* Custom WebSocket Relay URL */}
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-mono uppercase dark:text-slate-400 text-slate-500">
+                      Remote Relay WebSocket URL (Optional)
+                    </label>
+                    <span className="text-[10px] text-slate-500 font-mono">e.g. wss://your-relay.onrender.com</span>
+                  </div>
+                  <input
+                    type="text"
+                    value={voiceRelayUrl}
+                    onChange={(e) => setVoiceRelayUrl(e.target.value)}
+                    placeholder="wss://your-cloud-relay-service.com or ws://localhost:3001"
+                    className="h-8 px-3 rounded-lg dark:bg-[#0a0a0a] bg-slate-50 border dark:border-white/[0.08] border-slate-200 text-xs font-mono dark:text-white text-slate-900 focus:outline-none focus:border-brand-green placeholder:text-slate-500"
+                  />
+                  <span className="text-[10px] dark:text-slate-400 text-slate-500 leading-normal">
+                    When hosted on static CDN (Firebase Hosting), leave blank to automatically use Browser Voice AI, or paste your deployed relay endpoint if running on Render / Railway / Cloud Run.
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Data Ingestion & Feed Endpoints */}
+            <div className="p-5 rounded-xl dark:bg-[#121212] bg-white border dark:border-white/[0.08] border-slate-200 flex flex-col gap-3 shadow-xs">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 dark:text-white text-slate-900 font-semibold text-xs tracking-tight">
                   <Radio className="w-4 h-4 text-brand-green" />
                   <span>Telemetry Ingestion Providers</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs">
-                  <span className="text-[10px] font-mono uppercase text-slate-400">Sync Cycle:</span>
+                  <span className="text-[10px] font-mono uppercase dark:text-slate-400 text-slate-500">Sync Cycle:</span>
                   <select
                     value={syncFreq}
                     onChange={(e) => setSyncFreq(e.target.value as any)}
-                    className="h-7 px-2 rounded bg-[#0a0e14] border border-[#1c2333] text-[11px] font-mono text-white focus:outline-none focus:border-brand-green"
+                    className="h-7 px-2 rounded-lg dark:bg-[#0a0a0a] bg-slate-50 border dark:border-white/[0.08] border-slate-200 text-[11px] font-mono dark:text-white text-slate-900 focus:outline-none focus:border-brand-green"
                   >
                     <option value="15">Every 15 min</option>
                     <option value="30">Every 30 min</option>
@@ -183,18 +310,18 @@ export default function SettingsPage() {
               </div>
 
               <div className="flex flex-col gap-2 font-mono text-xs">
-                <div className="flex items-center justify-between p-2 rounded bg-[#0a0e14] border border-[#1c2333]/80">
-                  <span className="text-slate-300">IMD Doppler Radar Network</span>
+                <div className="flex items-center justify-between p-2 rounded-lg dark:bg-[#0a0a0a] bg-slate-50 border dark:border-white/[0.08] border-slate-200">
+                  <span className="dark:text-slate-300 text-slate-700">IMD Doppler Radar Network</span>
                   <span className="text-brand-green text-[10px]">CONNECTED · 15m POLLING</span>
                 </div>
 
-                <div className="flex items-center justify-between p-2 rounded bg-[#0a0e14] border border-[#1c2333]/80">
-                  <span className="text-slate-300">INSAT-3DR Geostationary Imagery</span>
+                <div className="flex items-center justify-between p-2 rounded-lg dark:bg-[#0a0a0a] bg-slate-50 border dark:border-white/[0.08] border-slate-200">
+                  <span className="dark:text-slate-300 text-slate-700">INSAT-3DR Geostationary Imagery</span>
                   <span className="text-brand-green text-[10px]">SYNCED · 30m CYCLE</span>
                 </div>
 
-                <div className="flex items-center justify-between p-2 rounded bg-[#0a0e14] border border-[#1c2333]/80">
-                  <span className="text-slate-300">GFS &amp; ECMWF Model Ensembles</span>
+                <div className="flex items-center justify-between p-2 rounded-lg dark:bg-[#0a0a0a] bg-slate-50 border dark:border-white/[0.08] border-slate-200">
+                  <span className="dark:text-slate-300 text-slate-700">GFS &amp; ECMWF Model Ensembles</span>
                   <span className="text-brand-green text-[10px]">00Z &amp; 12Z RUNS ACTIVE</span>
                 </div>
               </div>

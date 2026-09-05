@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { Menu, Settings, Sun, Moon, LogOut, Radio } from 'lucide-react'
+import { Menu, Settings, Sun, Moon, LogOut } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 
 interface DashboardTopbarProps {
@@ -18,23 +18,22 @@ export default function DashboardTopbar({ onMenuToggle, isDark, onThemeToggle }:
   }
 
   return (
-    <header className="h-11 border-b border-[#1c2d38] bg-[#001e2b] text-[#a8b3bc] flex items-center justify-between px-4 shrink-0 select-none z-10 font-sans">
-      {/* Left: Mobile hamburger + Minimal title */}
-      <div className="flex items-center gap-3">
+    <header className="lg:hidden h-11 border-b dark:border-white/[0.08] border-slate-200 dark:bg-[#0a0a0a] bg-white dark:text-[#a8b3bc] text-slate-600 flex items-center justify-between px-3 shrink-0 select-none z-10 font-sans">
+      {/* Left: Mobile hamburger + Minimal brand */}
+      <div className="flex items-center gap-2.5">
         <button
           onClick={onMenuToggle}
-          className="lg:hidden p-1.5 rounded-md text-[#a8b3bc] hover:text-white hover:bg-[#002d3f] transition-colors cursor-pointer"
+          className="p-1.5 rounded-md dark:text-[#a8b3bc] text-slate-600 dark:hover:text-white hover:text-slate-900 dark:hover:bg-white/[0.06] hover:bg-slate-100 transition-colors cursor-pointer"
           aria-label="Toggle navigation menu"
         >
           <Menu className="w-4 h-4" />
         </button>
 
-        <div className="flex items-center gap-2">
-          <Radio className="w-3.5 h-3.5 text-brand-green animate-pulse" />
-          <span className="text-xs font-mono text-[#a8b3bc]">
-            WeatherGPT Telemetry Active
+        <Link to="/dashboard" className="flex items-center gap-1.5">
+          <span className="font-sans text-xs font-bold tracking-wider dark:text-white text-slate-900 uppercase">
+            WEATHER<span className="text-brand-green">GPT</span>
           </span>
-        </div>
+        </Link>
       </div>
 
       {/* Right: Clean minimal actions */}
@@ -43,16 +42,16 @@ export default function DashboardTopbar({ onMenuToggle, isDark, onThemeToggle }:
         <button
           onClick={onThemeToggle}
           title="Toggle Theme"
-          className="w-7 h-7 rounded-md flex items-center justify-center text-[#a8b3bc] hover:text-white hover:bg-[#002d3f] transition-colors cursor-pointer"
+          className="w-7 h-7 rounded-md flex items-center justify-center dark:text-[#a8b3bc] text-slate-600 dark:hover:text-white hover:text-slate-900 dark:hover:bg-white/[0.06] hover:bg-slate-100 transition-colors duration-120 cursor-pointer"
         >
-          {isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+          {isDark ? <Sun className="w-3.5 h-3.5 text-brand-green" /> : <Moon className="w-3.5 h-3.5 text-brand-green" />}
         </button>
 
         {/* Settings Link */}
         <Link
           to="/dashboard/settings"
           title="Settings"
-          className="w-7 h-7 rounded-md flex items-center justify-center text-[#a8b3bc] hover:text-white hover:bg-[#002d3f] transition-colors cursor-pointer"
+          className="w-7 h-7 rounded-md flex items-center justify-center dark:text-[#a8b3bc] text-slate-600 dark:hover:text-white hover:text-slate-900 dark:hover:bg-white/[0.06] hover:bg-slate-100 transition-colors duration-120 cursor-pointer"
         >
           <Settings className="w-3.5 h-3.5" />
         </Link>
@@ -61,7 +60,7 @@ export default function DashboardTopbar({ onMenuToggle, isDark, onThemeToggle }:
         <button
           onClick={handleLogout}
           title="Sign Out"
-          className="w-7 h-7 rounded-md flex items-center justify-center text-[#a8b3bc] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+          className="w-7 h-7 rounded-md flex items-center justify-center dark:text-[#a8b3bc] text-slate-600 hover:text-red-400 hover:bg-red-500/10 transition-colors duration-120 cursor-pointer"
         >
           <LogOut className="w-3.5 h-3.5" />
         </button>

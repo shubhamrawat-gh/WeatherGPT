@@ -11,25 +11,20 @@ colors:
   brand-green: "#00ed64"
   brand-green-dark: "#00684a"
   brand-green-mid: "#00a35c"
-  brand-green-soft: "#c3f0d2"
-  brand-teal-deep: "#001e2b"
-  brand-teal: "#003d4f"
-  brand-teal-mid: "#00684a"
-  accent-purple: "#7b3ff2"
-  accent-orange: "#fa6e39"
-  accent-pink: "#f06bb8"
-  accent-blue: "#3d4f9f"
-  semantic-warning-bg: "#fff8e0"
-  semantic-warning-text: "#946f3f"
+  brand-green-soft: "rgba(0, 237, 100, 0.12)"
+  brand-teal-deep: "#0a0a0a"
+  brand-teal: "#121212"
+  brand-teal-mid: "#171717"
   canvas: "#ffffff"
-  canvas-dark: "#001e2b"
+  canvas-dark: "#0a0a0a"
   surface: "#f9fbfa"
   surface-soft: "#f4f7f6"
-  surface-feature: "#e3fcef"
+  surface-dark: "#121212"
+  surface-soft-dark: "#171717"
   hairline: "#e1e5e8"
   hairline-soft: "#eceff1"
   hairline-strong: "#c1ccd6"
-  hairline-dark: "#1c2d38"
+  hairline-dark: "rgba(255, 255, 255, 0.08)"
   ink: "#001e2b"
   charcoal: "#1c2d38"
   slate: "#3d4f5b"
@@ -404,35 +399,27 @@ components:
 
 ## Overview
 
-MongoDB carries a strong dual-mode visual identity — dark deep-teal hero bands with the unmistakable bright MongoDB green ({colors.brand-green}) CTA pill paired with stark white documentation and pricing surfaces. The homepage opens with "One data platform. Unlimited AI potential." headline over a deep navy hero, the green pill sitting at the visual center as the primary CTA. Lower on the page, embedded code mockup cards (terminal-aesthetic) sit on the dark hero band, breaking out into white feature cards below. The pricing page renders a 3-tier comparison (Free / Flex / Dedicated) with a featured tier highlighted in soft mint background and bright green border. The MongoDB University page presents a course catalog grid where each tile carries a colored category tag (orange, purple, green, teal) — these are MongoDB's category-encoding accent colors and are the only place outside the brand green where saturated color appears.
+WeatherGPT incorporates a refined, minimal, near-black visual identity inspired by Claude's conversational interface and modern developer consoles. The system is built on a near-black (`#0A0A0A`) canvas separated by 1px low-opacity hairlines (`rgba(255, 255, 255, 0.08)`), pairing zero-gimmick polish with a single weather-appropriate accent color: WeatherGPT Lime (`#00ED64`).
 
-The system uses Euclid Circular A as its display face. The face is contemporary geometric — confident but not overly playful — and pairs naturally with both the developer-tool aesthetic of the database product and the educational positioning of the learning surfaces. Cards use `{rounded.lg}` (12px) corners; buttons use `{rounded.full}` pills universally. The brand-teal palette ({colors.brand-teal-deep}) anchors hero bands, footer, code mockups, and the dark CTA banners.
+The interface uses **Geist Sans** (with `Euclid Circular A` as geometric secondary fallback) for clean, high-legibility UI text, **Fraunces** (serif) for large display numbers and temperatures, and **Source Code Pro** for monospace telemetry data. Buttons use restrained 8-10px rounded corners, avoiding heavy shadows and gradients in favor of crisp hairline borders and generous whitespace.
 
 **Key Characteristics:**
-- Deep navy/teal hero bands ({colors.brand-teal-deep}) with bright MongoDB green ({colors.brand-green}) CTA pills
-- Stark white pricing/documentation surfaces with colored category tags for course tiles (purple, orange, green, teal)
-- Euclid Circular A across every UI surface
-- Pill-shaped buttons ({rounded.full}) and 12px-rounded cards
-- 3-tier pricing comparison (Free / Flex / Dedicated) with featured-mint highlight tier
-- Code mockup cards with terminal-aesthetic dark canvas
+- Near-black canvas (`#0A0A0A`) and subtle dark panels (`#121212`)
+- Single accent: WeatherGPT Lime (`#00ED64`) used sparingly for active states, links, and the send action
+- Geist Sans for UI text, Fraunces serif for large display numbers/temperatures, and Source Code Pro for telemetry
+- 1px low-opacity white/gray hairline borders separating all panels and cards
+- Zero glassmorphism, zero gradients, zero heavy drop shadows
 
 ## Colors
 
-> Source pages: mongodb.com/ (homepage), /products/platform/atlas-database (Atlas product), /products/self-managed/community-edition, learn.mongodb.com/ (MongoDB University), /solutions/use-cases/artificial-intelligence (AI), /pricing (3-tier comparison). Token coverage was identical across all six pages.
-
 ### Brand & Accent
-- **MongoDB Green** ({colors.brand-green}): The brand's most recognizable signal — bright pill-CTA color
-- **Green Dark** ({colors.brand-green-dark}): Inline link color, secondary green
-- **Green Mid** ({colors.brand-green-mid}): Mid-spectrum green for atmospheric tints
-- **Green Soft** ({colors.brand-green-soft}): Pale-mint background tint for success badges and featured pricing tier
-- **Brand Teal Deep** ({colors.brand-teal-deep}): Deep navy-teal for hero bands, footer
-- **Brand Teal** ({colors.brand-teal}): Mid-spectrum teal
-- **Brand Teal Mid** ({colors.brand-teal-mid}): Lighter teal for hero platform cards
-
-### Category Accent (Course Tags)
-- **Accent Purple** ({colors.accent-purple}): Course tag for "Database & Security"
-- **Accent Orange** ({colors.accent-orange}): Course tag for "Search"
-- **Accent Pink** ({colors.accent-pink}): Course tag variant
+- **WeatherGPT Lime** ({colors.brand-green}): The primary accent color (`#00ED64`) — used sparingly for active states, indicators, links, and the send button
+- **Lime Dark / Hover** ({colors.brand-green-dark}): `#00684a` / `#00b545` for active and pressed states
+- **Lime Soft** ({colors.brand-green-soft}): Desaturated mint/lime tint (`rgba(0, 237, 100, 0.12)`)
+- **Near-Black Canvas** ({colors.canvas-dark}): `#0A0A0A` near-black base canvas
+- **Surface Dark** ({colors.surface-dark}): `#121212` subtle card and dock background
+- **Surface Soft Dark** ({colors.surface-soft-dark}): `#171717` elevated panel background
+- **Hairline Dark** ({colors.hairline-dark}): `rgba(255, 255, 255, 0.08)` 1px low-opacity border separator
 - **Accent Blue** ({colors.accent-blue}): Course tag variant for atlas/cloud topics
 
 ### Surface

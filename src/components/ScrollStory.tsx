@@ -84,8 +84,7 @@ export default function ScrollStory() {
       }
     }
 
-    // State for smooth auto-rotation when scroll is stopped
-    let autoRotateOffset = 0
+    // State for smooth auto-rotation and camera convergence
     let isScrolling = false
     let scrollTimeout: any = null
     let animationFrameId: any = null
@@ -125,8 +124,9 @@ export default function ScrollStory() {
         })
       }
 
-      // Initialize the master timeline
+      // Initialize the master timeline with hardware-accelerated force3D
       const tl = gsap.timeline({
+        defaults: { force3D: true },
         scrollTrigger: {
           trigger: container,
           start: "top top+=80", // Align pin with header height (80px)
@@ -141,7 +141,7 @@ export default function ScrollStory() {
             if (scrollTimeout) clearTimeout(scrollTimeout)
             scrollTimeout = setTimeout(() => {
               isScrolling = false
-            }, 200) // Generous debounce — keeps "scrolling" state active during slow scrolls
+            }, 200)
 
             const progress = self.progress
             if (progress < 0.95) {
@@ -391,6 +391,8 @@ export default function ScrollStory() {
       let cachedGlobe: any = null
       let activeDataState = -1 // -1 means uninitialized
 
+      const CONVERGENCE_THRESHOLD = 0.001
+
       // 60fps rendering tick to smooth out camera moves and auto-rotations
       const tick = () => {
         if (!isTickLoopRunning) return
@@ -408,36 +410,42 @@ export default function ScrollStory() {
             return
           }
 
-          // Smoothly manage auto-rotation offset based on scroll status
-          if (isScrolling) {
-            autoRotateOffset *= 0.92 // Smooth exponential decay — no jarring snap
-            if (Math.abs(autoRotateOffset) < 0.01) autoRotateOffset = 0
-          } else {
-            autoRotateOffset += 0.015 // Very gentle idle drift
-          }
-
           const targetLat = globeState.lat
-          const targetLng = globeState.lng + autoRotateOffset
+          const targetLng = globeState.lng
           const targetAlt = globeState.altitude
 
           const deltaLat = Math.abs(targetLat - currentLat)
           const deltaLng = Math.abs(targetLng - currentLng)
           const deltaAlt = Math.abs(targetAlt - currentAlt)
 
-          // Gentle camera convergence — heavy, cinematic, Apple-like inertia
-          if (deltaLat > 0.0005 || deltaLng > 0.0005 || deltaAlt > 0.0005) {
-            currentLat += (targetLat - currentLat) * 0.08
-            currentLng += (targetLng - currentLng) * 0.08
-            currentAlt += (targetAlt - currentAlt) * 0.08
+          const isConverging = deltaLat > CONVERGENCE_THRESHOLD ||
+                               deltaLng > CONVERGENCE_THRESHOLD ||
+                               deltaAlt > CONVERGENCE_THRESHOLD
 
-            const povChanged = Math.abs(currentLat - lastPointOfView.lat) > 0.0005 ||
-                               Math.abs(currentLng - lastPointOfView.lng) > 0.0005 ||
-                               Math.abs(currentAlt - lastPointOfView.altitude) > 0.0005
+          // Gentle camera convergence — heavy, cinematic inertia
+          if (isConverging) {
+            currentLat += (targetLat - currentLat) * 0.12
+            currentLng += (targetLng - currentLng) * 0.12
+            currentAlt += (targetAlt - currentAlt) * 0.12
+
+            const povChanged = Math.abs(currentLat - lastPointOfView.lat) > CONVERGENCE_THRESHOLD ||
+                               Math.abs(currentLng - lastPointOfView.lng) > CONVERGENCE_THRESHOLD ||
+                               Math.abs(currentAlt - lastPointOfView.altitude) > CONVERGENCE_THRESHOLD
 
             if (povChanged) {
               globe.pointOfView({ lat: currentLat, lng: currentLng, altitude: currentAlt }, 0)
               lastPointOfView = { lat: currentLat, lng: currentLng, altitude: currentAlt }
             }
+          } else if (!isScrolling) {
+            // Explicit completion condition: when delta is below tolerance threshold
+            // and user is not actively scrolling, snap to target and STOP the rAF loop.
+            currentLat = targetLat
+            currentLng = targetLng
+            currentAlt = targetAlt
+            globe.pointOfView({ lat: currentLat, lng: currentLng, altitude: currentAlt }, 0)
+            lastPointOfView = { lat: currentLat, lng: currentLng, altitude: currentAlt }
+            stopTickLoop()
+            return
           }
 
           // Show/hide hotspots and arcs strictly tied to scroll progress

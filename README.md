@@ -20,7 +20,15 @@ By combining real-time meteorological models (GFS, ECMWF, IMD telemetry, INSAT s
 
 ## 🌟 Key Features
 
-### 🤖 1. Multilingual WeatherGPT Conversational AI Assistant
+### 🎙️ 1. Real-Time Live Voice AI (Gemini Live API)
+- **Native Speech-to-Speech**: Spoken voice interaction with near-zero latency powered by Google's bidirectional `models/gemini-2.5-flash-native-audio-latest` model.
+- **Mid-Session Tool Calling**: Live voice agent autonomously calls WeatherGPT meteorological tools (`get_live_weather`, `get_weather_alerts`, `get_agro_climate_advisory`) mid-conversation to speak verified real-time numbers.
+- **ChatGPT / Claude Style Voice HUD**: Pulsing audio-reactive visualizer orb, listening/thinking/speaking state indicators, and tap-to-interrupt barge-in.
+- **Live Streaming Dual Captions**: Real-time partial transcription as you speak, with streaming assistant captions as audio plays.
+- **Secure Server-Side Relay**: `GEMINI_API_KEY` is strictly held on the backend relay (`server/relay.mjs`), never exposed to the client or browser bundle.
+- **Seamless Multimodal Switching**: Users can talk or type interchangeably within the same conversation thread.
+
+### 🤖 2. Multilingual WeatherGPT Conversational AI Assistant
 - **Bilingual & Hinglish Support**: Natural conversational fluency in English, Hindi, Hinglish (*"aaj mausam kaisa rahega"*), Marathi, Tamil, Bengali, Telugu, and more.
 - **Meteorological Domain Guardrails**: Strict safety filters ensuring 100% focused, authoritative weather, climate, and agro-met outputs while rejecting off-topic prompts.
 - **Dual Engine Architecture**: Integrated with OpenRouter API (Gemini Flash, LLaMA 3.3) and backed by an offline meteorological simulation engine for network resilience.
@@ -84,23 +92,33 @@ By combining real-time meteorological models (GFS, ECMWF, IMD telemetry, INSAT s
    ```bash
    cp .env.example .env
    ```
-   Open `.env` and set your OpenRouter API key:
+   Configure `.env` with your API keys:
    ```env
+   # OpenRouter API Key for text chat (optional fallback)
    VITE_OPENROUTER_API_KEY=your_openrouter_api_key_here
-   ```
-   *(Note: The platform features a built-in meteorological intelligence engine that provides forecasts even if no API key is provided!)*
 
-4. **Start Development Server:**
+   # Gemini Live Voice API Key (Strictly server-side for voice relay, never exposed to browser)
+   GEMINI_API_KEY=your_gemini_api_key_here
+   ```
+
+4. **Start the Voice Relay Service:**
+   In a separate terminal, launch the secure WebSocket relay (runs on port 3001):
+   ```bash
+   npm run relay
+   ```
+
+5. **Start Frontend Development Server:**
    ```bash
    npm run dev
    ```
+   *(The Vite dev server automatically proxies `/voice-relay` WebSocket traffic to the local relay service on port 3001.)*
 
-5. **Build for Production:**
+6. **Build for Production:**
    ```bash
    npm run build
    ```
 
-6. **Preview Production Build:**
+7. **Preview Production Build:**
    ```bash
    npm run preview
    ```

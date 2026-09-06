@@ -251,14 +251,22 @@ export function stripThinkingProcess(rawText: string): string {
   return extractThinkingAndResponse(rawText).text
 }
 
+export interface GenerateWeatherResponseOptions {
+  isVoice?: boolean
+  maxTokens?: number
+}
+
 /**
- * Generate AI Response with Multilingual Support
+ * Generate AI Response with Multilingual Support and Ultra-Fast Voice Mode
  */
 export async function generateWeatherResponse(
   userPrompt: string,
   history: ChatMessageParam[] = [],
-  selectedLanguageCode = 'en'
+  selectedLanguageCode = 'en',
+  options?: GenerateWeatherResponseOptions
 ): Promise<AIResponse> {
+  const isVoiceMode = Boolean(options?.isVoice)
+
   // 1. Layer 1: Guardrail Check with Hinglish & Regional awareness
   const guardrailCheck = evaluateWeatherGuardrails(userPrompt, selectedLanguageCode)
   if (!guardrailCheck.isAllowed) {
@@ -279,12 +287,22 @@ export async function generateWeatherResponse(
     INDIC_SCRIPT_REGEX.test(userPrompt)
 
   let languageInstruction = ''
-  if (isHinglishOrHindi) {
-    languageInstruction = `\n\nCRITICAL LANGUAGE MANDATE: The user has asked in Hindi or Hinglish. You MUST answer the query fully in Hindi (हिंदी). Provide a detailed, realistic forecast table with dates/metrics, bulleted notes, and safety warnings for the requested city or district. DO NOT EXPOSE ANY THINKING PROCESS.`
-  } else if (activeLang.code !== 'en') {
-    languageInstruction = `\n\nCRITICAL MULTILINGUAL MANDATE: The user has selected ${activeLang.name} (${activeLang.nativeName}). You MUST answer the query completely in ${activeLang.nativeName} (${activeLang.name}). Use standard regional meteorological and farming terms. Maintain clean Markdown tables and bullet points in ${activeLang.nativeName}. DO NOT EXPOSE ANY THINKING PROCESS.`
+  if (isVoiceMode) {
+    if (isHinglishOrHindi) {
+      languageInstruction = `\n\nCRITICAL VOICE MODE MANDATE: Speak in Hindi (हिंदी). Give the weather answer directly in 1 or 2 short spoken sentences (under 30 words). Never use markdown tables, asterisks, bullet points, or pleasantries.`
+    } else if (activeLang.code !== 'en') {
+      languageInstruction = `\n\nCRITICAL VOICE MODE MANDATE: Speak in ${activeLang.nativeName} (${activeLang.name}). Keep the reply to 1 or 2 concise spoken sentences (under 30 words). Never output tables or bullets.`
+    } else {
+      languageInstruction = `\n\nCRITICAL VOICE MODE MANDATE: This answer is spoken aloud. Give the current temperature and conditions in strictly 1 to 2 short sentences (under 25 words). Never output markdown tables, bullets, or headers.`
+    }
   } else {
-    languageInstruction = `\n\nLANGUAGE ADAPTATION: If the user queries in an Indian regional language or Hinglish, detect it automatically and respond fully in that same language. DO NOT EXPOSE ANY THINKING PROCESS.`
+    if (isHinglishOrHindi) {
+      languageInstruction = `\n\nCRITICAL LANGUAGE MANDATE: The user has asked in Hindi or Hinglish. You MUST answer the query fully in Hindi (हिंदी). Provide a detailed, realistic forecast table with dates/metrics, bulleted notes, and safety warnings for the requested city or district. DO NOT EXPOSE ANY THINKING PROCESS.`
+    } else if (activeLang.code !== 'en') {
+      languageInstruction = `\n\nCRITICAL MULTILINGUAL MANDATE: The user has selected ${activeLang.name} (${activeLang.nativeName}). You MUST answer the query completely in ${activeLang.nativeName} (${activeLang.name}). Use standard regional meteorological and farming terms. Maintain clean Markdown tables and bullet points in ${activeLang.nativeName}. DO NOT EXPOSE ANY THINKING PROCESS.`
+    } else {
+      languageInstruction = `\n\nLANGUAGE ADAPTATION: If the user queries in an Indian regional language or Hinglish, detect it automatically and respond fully in that same language. DO NOT EXPOSE ANY THINKING PROCESS.`
+    }
   }
 
   const systemPrompt = `${BASE_SYSTEM_PROMPT}${languageInstruction}`
@@ -299,9 +317,12 @@ export async function generateWeatherResponse(
 
     const messages: ChatMessageParam[] = [
       { role: 'system', content: systemPrompt },
-      ...history.slice(-6),
+      ...history.slice(isVoiceMode ? -2 : -6),
       { role: 'user', content: userPrompt },
     ]
+
+    const maxTokens = options?.maxTokens || (isVoiceMode ? 120 : 2500)
+    const temperature = isVoiceMode ? 0.4 : 0.6
 
     for (const model of modelsToTry) {
       try {
@@ -316,8 +337,8 @@ export async function generateWeatherResponse(
           body: JSON.stringify({
             model,
             messages,
-            temperature: 0.6,
-            max_tokens: 2500,
+            temperature,
+            max_tokens: maxTokens,
           }),
         })
 
@@ -330,7 +351,7 @@ export async function generateWeatherResponse(
           if (rawContent.trim().length > 0 || apiReasoning.trim().length > 0) {
             const extracted = extractThinkingAndResponse(rawContent, apiReasoning)
             // If the model exhausted tokens only thinking and text is empty, generate an authoritative fallback response
-            const finalText = extracted.text.trim() || getOfflineFallbackResponse(userPrompt, activeLang.code)
+            const finalText = extracted.text.trim() || getOfflineFallbackResponse(userPrompt, activeLang.code, isVoiceMode)
             return {
               text: finalText,
               thinking: extracted.thinking,
@@ -351,14 +372,27 @@ export async function generateWeatherResponse(
 
   // 4. Regional Fallback if offline
   return {
-    text: getOfflineFallbackResponse(userPrompt, activeLang.code),
+    text: getOfflineFallbackResponse(userPrompt, activeLang.code, isVoiceMode),
     modelUsed: 'local-ensemble-fallback',
     source: 'offline_fallback',
   }
 }
 
-function getOfflineFallbackResponse(query: string, langCode = 'en'): string {
+function getOfflineFallbackResponse(query: string, langCode = 'en', isVoice = false): string {
   const lower = query.toLowerCase()
+
+  if (isVoice) {
+    if (langCode === 'hi' || lower.includes('mausam') || lower.includes('dhanbad') || lower.includes('aaj')) {
+      return 'आज मौसम मुख्य रूप से साफ रहेगा, तापमान 31 डिग्री सेल्सियस है और दोपहर बाद हल्की वर्षा की संभावना है।'
+    }
+    if (langCode === 'mr') {
+      return 'आज हवामान ढगाळ असून कमाल तापमान ३० अंश राहील आणि हलक्या पावसाच्या सरी पडण्याची शक्यता आहे.'
+    }
+    if (lower.includes('cyclone') || lower.includes('alert') || lower.includes('warning')) {
+      return 'Active depression tracked over Bay of Bengal with gusty coastal winds. Coastal districts are advised to remain on alert.'
+    }
+    return 'Currently conditions are partly cloudy with a temperature around 28 degrees and light breezes.'
+  }
 
   if (langCode === 'hi' || lower.includes('mausam') || lower.includes('dhanbad') || lower.includes('aaj')) {
     return `### **🌤️ मौसमजीपीटी (WeatherGPT) दैनिक मौसम पूर्वानुमान**\n\n| विवरण | आज का अनुमान |\n| :--- | :--- |\n| 🌡️ **तापमान** | 31°C / 24°C |\n| 💧 **आर्द्रता** | 82% |\n| 🌧️ **वर्षा की संभावना** | 70% (मध्यम से तेज बारिश) |\n| 💨 **हवा की गति** | 12–15 किमी/घंटा |\n\n- **मौसम विवरण:** आंशिक रूप से बादल छाए रहेंगे, दोपहर बाद गरज के साथ बारिश की संभावना है।\n- **नागरिक सलाह:** छाता साथ रखें और निचले इलाकों में जलभराव से सतर्क रहें।`

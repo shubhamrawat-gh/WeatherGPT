@@ -1,25 +1,19 @@
 /**
- * WeatherGPT Real-Time Voice AI Backend Relay
- * Connects browser WebSocket client directly to Google Gemini Live API
- * (BidiGenerateContent) while holding GEMINI_API_KEY securely on the server.
+ * WeatherGPT Voice AI Tools & Knowledge Engine
+ * Provides live telemetry execution and schema definitions for both
+ * client-side direct Gemini Live and server relay modes.
  */
 
-import http from 'node:http'
-import { fileURLToPath } from 'node:url'
-import { WebSocketServer, WebSocket } from 'ws'
-
-const MODEL_NAME = 'models/gemini-2.5-flash-native-audio-latest'
-const IDLE_TIMEOUT_MS = 5 * 60 * 1000 // 5 minutes inactivity cap
+import { fetchUsgsQuakes } from '../../tools/liveData/fetchUsgsQuakes'
 
 // In-memory caches for ultra-low latency tool execution (< 1ms cache hits)
-const weatherCache = new Map() // key: 'lat_lng', value: { data, expiresAt }
-const geocodeCache = new Map() // key: 'norm_name', value: { lat, lng, name, expiresAt }
+export const weatherCache = new Map<string, { data: any; expiresAt: number }>()
+export const geocodeCache = new Map<string, { lat: number; lng: number; name: string; expiresAt: number }>()
 
-const WEATHER_CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes fresh weather window
-const GEOCODE_CACHE_TTL_MS = 24 * 60 * 60 * 1000 // 24 hours geocode validity
+export const WEATHER_CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
+export const GEOCODE_CACHE_TTL_MS = 24 * 60 * 60 * 1000 // 24 hours
 
-// Comprehensive coordinates for Indian cities, state capitals, strategic hubs, and NER corridors
-const KNOWN_COORDS = {
+export const KNOWN_COORDS: Record<string, { lat: number; lng: number; name: string }> = {
   // Top Metros & Major Capitals
   mumbai: { lat: 19.0760, lng: 72.8777, name: 'Mumbai' },
   delhi: { lat: 28.6139, lng: 77.2090, name: 'Delhi' },
@@ -149,8 +143,7 @@ const KNOWN_COORDS = {
   'zojila pass': { lat: 34.2817, lng: 75.4797, name: 'Zojila Pass' }
 }
 
-// Active Weather Alerts (synced with WeatherGPT dataset)
-const ACTIVE_ALERTS = [
+export const ACTIVE_ALERTS = [
   {
     id: 'alt-001',
     title: 'Severe Cyclonic Storm Advisory (Bay of Bengal)',
@@ -203,8 +196,7 @@ const ACTIVE_ALERTS = [
   }
 ]
 
-// Regional Climate Statistics
-const REGIONAL_CLIMATE_STATS = [
+export const REGIONAL_CLIMATE_STATS = [
   { region: 'Northern Plains (Delhi, UP, Punjab)', avgTemp: 34.2, humidity: 58, rainfallDeparture: '+12%', monsoonStatus: 'Active', uvIndex: 8 },
   { region: 'Western Arid Zone (Rajasthan, Gujarat)', avgTemp: 39.8, humidity: 42, rainfallDeparture: '-18%', monsoonStatus: 'Deficient', uvIndex: 10 },
   { region: 'Central India (MP, Chhattisgarh, Vidarbha)', avgTemp: 32.5, humidity: 68, rainfallDeparture: '+6%', monsoonStatus: 'Normal', uvIndex: 7 },
@@ -213,8 +205,7 @@ const REGIONAL_CLIMATE_STATS = [
   { region: 'Southern Peninsula (Karnataka, TN, Kerala)', avgTemp: 29.6, humidity: 76, rainfallDeparture: '-4%', monsoonStatus: 'Normal', uvIndex: 8 }
 ]
 
-// WMO code description mapper
-function mapWmoCode(code) {
+export function mapWmoCode(code: number): string {
   if (code === 0) return 'Clear Sky'
   if (code === 1) return 'Mainly Clear'
   if (code === 2) return 'Partly Cloudy'
@@ -229,9 +220,9 @@ function mapWmoCode(code) {
 }
 
 /**
- * Fetch live weather from Open-Meteo API with ultra-low latency caching
+ * Fetch live weather from Open-Meteo API with caching
  */
-async function fetchOpenMeteoWeather(locationStr) {
+export async function fetchLiveWeather(locationStr: string): Promise<any> {
   const norm = (locationStr || '').toLowerCase().trim()
   const now = Date.now()
   let lat = 26.1844
@@ -239,7 +230,7 @@ async function fetchOpenMeteoWeather(locationStr) {
   let resolvedName = locationStr || 'Guwahati'
   let foundCoords = false
 
-  // 1. Instant match against KNOWN_COORDS (0ms)
+  // 1. Instant match in KNOWN_COORDS (0ms)
   for (const [key, val] of Object.entries(KNOWN_COORDS)) {
     if (norm === key || norm.includes(key) || key.includes(norm)) {
       lat = val.lat
@@ -252,7 +243,7 @@ async function fetchOpenMeteoWeather(locationStr) {
 
   // 2. Check geocodeCache (0ms)
   if (!foundCoords && geocodeCache.has(norm)) {
-    const cachedGeo = geocodeCache.get(norm)
+    const cachedGeo = geocodeCache.get(norm)!
     if (cachedGeo.expiresAt > now) {
       lat = cachedGeo.lat
       lng = cachedGeo.lng
@@ -261,7 +252,7 @@ async function fetchOpenMeteoWeather(locationStr) {
     }
   }
 
-  // 3. Fallback to Open-Meteo Geocoding if still unknown
+  // 3. Fallback to Open-Meteo Geocoding
   if (!foundCoords) {
     try {
       const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(norm)}&count=1&language=en&format=json`
@@ -280,18 +271,15 @@ async function fetchOpenMeteoWeather(locationStr) {
           })
         }
       }
-    } catch {
-      // Use fallback coords
-    }
+    } catch {}
   }
 
-  // 4. Check Weather Cache (0ms latency if recently queried within 5 min)
+  // 4. Check Weather Cache (0ms latency)
   const weatherKey = `${lat.toFixed(2)}_${lng.toFixed(2)}`
   if (weatherCache.has(weatherKey)) {
-    const cachedWeather = weatherCache.get(weatherKey)
-    if (cachedWeather.expiresAt > now) {
-      console.log(`[Relay Cache HIT] Returning cached weather for ${resolvedName} (0ms)`)
-      return { ...cachedWeather.data, location: resolvedName }
+    const cached = weatherCache.get(weatherKey)!
+    if (cached.expiresAt > now) {
+      return { ...cached.data, location: resolvedName }
     }
   }
 
@@ -316,7 +304,7 @@ async function fetchOpenMeteoWeather(locationStr) {
       riskSummary = 'Severe convective thunderstorm with lightning risk.'
     } else if (isHeavyRain) {
       riskLevel = 'high'
-      riskSummary = 'Heavy monsoon precipitation with flash flood and slope saturation hazard.'
+      riskSummary = 'Heavy monsoon precipitation with flash flood hazard.'
     } else if ((cur.wind_gusts_10m ?? 0) > 45) {
       riskLevel = 'moderate'
       riskSummary = 'Gusty crosswinds exceeding 45 km/h.'
@@ -340,15 +328,13 @@ async function fetchOpenMeteoWeather(locationStr) {
       ]
     }
 
-    // Store in cache for 5 minutes
     weatherCache.set(weatherKey, {
       data: weatherResult,
       expiresAt: now + WEATHER_CACHE_TTL_MS
     })
 
     return weatherResult
-  } catch (err) {
-    console.warn(`[Relay] Weather fetch fallback for ${resolvedName}:`, err.message)
+  } catch (err: any) {
     const fallbackResult = {
       location: resolvedName,
       coordinates: [lat, lng],
@@ -365,33 +351,25 @@ async function fetchOpenMeteoWeather(locationStr) {
         { day: 'Day After', condition: 'Partly Cloudy', rainMm: 3 }
       ]
     }
-
-    // Cache fallback briefly (1 minute) to avoid hammering during network drops
-    weatherCache.set(weatherKey, {
-      data: fallbackResult,
-      expiresAt: now + 60 * 1000
-    })
-
+    weatherCache.set(weatherKey, { data: fallbackResult, expiresAt: now + 60 * 1000 })
     return fallbackResult
   }
 }
 
 /**
- * Execute tool calls requested by Gemini Live
+ * Executes a tool requested by Gemini Live directly on the client
  */
-async function executeTool(name, args) {
-  console.log(`[Relay Tool Execution] Calling: ${name} with args:`, JSON.stringify(args))
+export async function executeVoiceTool(name: string, args: Record<string, any> = {}): Promise<any> {
+  console.log(`[VoiceTool Execution] ${name}:`, args)
 
   if (name === 'get_live_weather') {
-    const loc = args.location || 'Mumbai'
-    return await fetchOpenMeteoWeather(loc)
+    return await fetchLiveWeather(args.location || 'Mumbai')
   }
 
   if (name === 'get_weather_alerts') {
     const filter = (args.region_or_state || '').toLowerCase()
     const severityFilter = (args.severity || '').toLowerCase()
     let alerts = ACTIVE_ALERTS
-
     if (filter) {
       alerts = alerts.filter(a => a.region.toLowerCase().includes(filter) || a.state.toLowerCase().includes(filter))
     }
@@ -429,35 +407,32 @@ async function executeTool(name, args) {
 
   if (name === 'get_earthquakes') {
     try {
-      const { fetchUsgsQuakes } = await import('../tools/liveData/fetchUsgsQuakes.ts')
       const data = await fetchUsgsQuakes()
-      const quakes = data.features || []
+      const quakes = (data as any).features || []
       const locFilter = (args.region_or_state || '').toLowerCase()
       const filtered = locFilter
-        ? quakes.filter(q => (q.properties?.place || '').toLowerCase().includes(locFilter))
+        ? quakes.filter((q: any) => (q.properties?.place || '').toLowerCase().includes(locFilter))
         : quakes
       return {
         count: filtered.length,
         timeframe: 'Recent 24-48 hours',
-        earthquakes: filtered.map(q => ({
+        earthquakes: filtered.slice(0, 10).map((q: any) => ({
           magnitude: q.properties?.mag,
           severity: q.properties?.severity,
           place: q.properties?.place,
           depthKm: q.properties?.depthKm,
-          status: q.properties?.status,
           occurredAt: q.properties?.occurredAt
         }))
       }
-    } catch (err) {
-      return { error: `Unable to query USGS earthquake telemetry: ${err.message}` }
+    } catch (err: any) {
+      return { error: `Unable to query earthquakes: ${err.message}` }
     }
   }
 
-  return { error: `Unknown tool name: ${name}` }
+  return { error: `Unknown tool: ${name}` }
 }
 
-// System instructions for Gemini Live session (Ultra-low latency spoken delivery)
-const SYSTEM_INSTRUCTION = `You are WeatherGPT Live Voice AI, an operational meteorological intelligence assistant for India (SIH26068, Theme: Disaster Management).
+export const VOICE_SYSTEM_INSTRUCTION = `You are WeatherGPT Live Voice AI, an operational meteorological intelligence assistant for India (SIH26068, Theme: Disaster Management).
 Your voice is synthesized and spoken directly to the user in real time over an interactive voice stream.
 
 CORE OPERATIONAL RULES:
@@ -479,8 +454,7 @@ CORE OPERATIONAL RULES:
 5. STRICT DOMAIN BOUNDARY:
    - If asked non-weather topics (coding, politics, entertainment, sports), refuse in one short sentence: "I specialize only in meteorological intelligence."`
 
-// Tool function declarations for Gemini Live API
-const TOOLS_CONFIG = [
+export const VOICE_TOOLS_CONFIG = [
   {
     functionDeclarations: [
       {
@@ -556,393 +530,3 @@ const TOOLS_CONFIG = [
     ]
   }
 ]
-
-/**
- * Attaches the Voice Relay WebSocket Server to an HTTP server (e.g. Vite dev server or standalone server).
- */
-export function attachVoiceRelay(httpServer, options = {}) {
-  const apiKey = (options.geminiApiKey || process.env.GEMINI_API_KEY || '').trim()
-  const voiceName = options.voiceName || process.env.GEMINI_VOICE || 'Kore'
-  const path = options.path
-
-  // If path is specified, use noServer: true so ws does not abort other upgrade requests (e.g. Vite HMR)
-  const wss = path ? new WebSocketServer({ noServer: true }) : new WebSocketServer({ server: httpServer })
-
-  if (path) {
-    httpServer.on('upgrade', (request, socket, head) => {
-      try {
-        const url = new URL(request.url || '', `http://${request.headers.host || 'localhost'}`)
-        if (url.pathname === path) {
-          wss.handleUpgrade(request, socket, head, (clientWs) => {
-            wss.emit('connection', clientWs, request)
-          })
-        }
-      } catch (err) {
-        console.warn('[Relay] Error handling upgrade request:', err)
-      }
-    })
-  }
-
-  wss.on('connection', (clientWs, req) => {
-    console.log(`[Relay] New browser client connected from ${req.socket.remoteAddress} (path: ${req.url})`)
-
-    if (!apiKey) {
-      console.error('[Relay ERROR] GEMINI_API_KEY is not set.')
-      clientWs.send(JSON.stringify({
-        type: 'error',
-        message: 'GEMINI_API_KEY environment variable is not configured on the server.'
-      }))
-      clientWs.close(1008, 'GEMINI_API_KEY not configured')
-      return
-    }
-
-    const geminiLiveUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${apiKey}`
-
-    let geminiWs = null
-    let idleTimer = null
-    let isGeminiReady = false
-
-    const resetIdleTimer = () => {
-      if (idleTimer) clearTimeout(idleTimer)
-      idleTimer = setTimeout(() => {
-        console.log('[Relay] Session idle timeout reached (5 min). Closing connection.')
-        if (clientWs.readyState === WebSocket.OPEN) {
-          clientWs.send(JSON.stringify({ type: 'warning', message: 'Session closed due to inactivity.' }))
-          clientWs.close(1000, 'Idle timeout')
-        }
-        cleanup()
-      }, IDLE_TIMEOUT_MS)
-    }
-
-    const safeSendClient = (payload) => {
-      if (clientWs && clientWs.readyState === WebSocket.OPEN) {
-        try {
-          clientWs.send(typeof payload === 'string' ? payload : JSON.stringify(payload))
-        } catch (err) {
-          console.warn('[Relay] Failed to send to Client:', err.message)
-        }
-      }
-    }
-
-    const safeSendGemini = (payload) => {
-      if (geminiWs && geminiWs.readyState === WebSocket.OPEN) {
-        try {
-          geminiWs.send(typeof payload === 'string' ? payload : JSON.stringify(payload))
-        } catch (err) {
-          console.warn('[Relay] Failed to send to Gemini:', err.message)
-        }
-      }
-    }
-
-    const cleanup = () => {
-      if (idleTimer) {
-        clearTimeout(idleTimer)
-        idleTimer = null
-      }
-      if (geminiWs) {
-        console.log('[Relay] Terminating Gemini Live connection and releasing all resources.')
-        try {
-          geminiWs.on('error', () => {})
-          if (geminiWs.readyState === WebSocket.OPEN) {
-            geminiWs.close(1000, 'Session ended')
-          }
-          geminiWs.terminate()
-        } catch (err) {
-          console.warn('[Relay] Error closing geminiWs:', err?.message || err)
-        }
-        geminiWs = null
-      }
-      isGeminiReady = false
-    }
-
-    resetIdleTimer()
-
-    // Connect to Gemini Live API
-    try {
-      geminiWs = new WebSocket(geminiLiveUrl)
-    } catch (err) {
-      console.error('[Relay] Failed to initiate Gemini WebSocket:', err)
-      safeSendClient({ type: 'error', message: 'Failed to connect to Gemini Live API' })
-      clientWs.close()
-      return
-    }
-
-    geminiWs.on('open', () => {
-      if (!geminiWs || geminiWs.readyState !== WebSocket.OPEN) return
-      console.log('[Relay] Connected to Gemini Live API. Sending setup handshake...')
-      const setupMessage = {
-        setup: {
-          model: MODEL_NAME,
-          generationConfig: {
-            responseModalities: ['AUDIO'],
-            temperature: 0.4,
-            speechConfig: {
-              voiceConfig: {
-                prebuiltVoiceConfig: {
-                  voiceName: voiceName
-                }
-              }
-            }
-          },
-          systemInstruction: {
-            parts: [{ text: SYSTEM_INSTRUCTION }]
-          },
-          tools: TOOLS_CONFIG
-        }
-      }
-      safeSendGemini(setupMessage)
-    })
-
-    geminiWs.on('message', async (data) => {
-      resetIdleTimer()
-      try {
-        const rawText = data.toString('utf-8')
-        const parsed = JSON.parse(rawText)
-
-        // 1. Setup Acknowledgement
-        if (parsed.setupComplete) {
-          console.log('[Relay] Gemini Live setup complete! Relay is ready.')
-          isGeminiReady = true
-          safeSendClient({ type: 'ready' })
-          return
-        }
-
-        // 2. Tool Calls from Gemini
-        if (parsed.toolCall?.functionCalls?.length > 0) {
-          for (const call of parsed.toolCall.functionCalls) {
-            console.log(`[Relay] Gemini requested tool: ${call.name} (id: ${call.id})`)
-
-            // Notify frontend that tool was invoked (for live HUD badge)
-            safeSendClient({
-              type: 'tool_call',
-              name: call.name,
-              args: call.args,
-              status: 'executing'
-            })
-
-            // Execute tool
-            const toolResult = await executeTool(call.name, call.args || {})
-
-            // Notify frontend tool completed
-            safeSendClient({
-              type: 'tool_call',
-              name: call.name,
-              args: call.args,
-              result: toolResult,
-              status: 'completed'
-            })
-
-            // Return toolResponse back to Gemini Live
-            const toolResponse = {
-              toolResponse: {
-                functionResponses: [
-                  {
-                    id: call.id,
-                    name: call.name,
-                    response: {
-                      result: toolResult
-                    }
-                  }
-                ]
-              }
-            }
-            safeSendGemini(toolResponse)
-          }
-          return
-        }
-
-        // 3. Server Generated Content (Audio & Transcript)
-        if (parsed.serverContent) {
-          const sc = parsed.serverContent
-
-          // Interruption detected by Gemini VAD (user barged in)
-          if (sc.interrupted) {
-            console.log('[Relay] Model was interrupted by user speech.')
-            safeSendClient({ type: 'interrupted' })
-            return
-          }
-
-          // Model generated parts (audio chunks & text captions)
-          if (sc.modelTurn?.parts?.length > 0) {
-            for (const part of sc.modelTurn.parts) {
-              if (part.inlineData?.data) {
-                safeSendClient({
-                  type: 'audio',
-                  data: part.inlineData.data,
-                  mimeType: part.inlineData.mimeType || 'audio/pcm;rate=24000'
-                })
-              }
-              // Filter out internal reasoning / thought blocks
-              if (part.text && !part.thought) {
-                const cleanText = part.text.replace(/^\*\*.*?\*\*\s*/g, '').trim()
-                if (cleanText) {
-                  safeSendClient({
-                    type: 'transcript',
-                    text: cleanText,
-                    sender: 'assistant'
-                  })
-                }
-              }
-            }
-          }
-
-          // Turn complete
-          if (sc.turnComplete) {
-            safeSendClient({ type: 'turn_complete' })
-          }
-        }
-      } catch (err) {
-        console.error('[Relay] Error handling Gemini message:', err)
-      }
-    })
-
-    geminiWs.on('error', (err) => {
-      console.error('[Relay] Gemini Live WebSocket error:', err.message || err)
-      safeSendClient({ type: 'error', message: err.message || 'Gemini Live session error' })
-    })
-
-    geminiWs.on('close', (code, reason) => {
-      const reasonStr = reason ? reason.toString() : ''
-      console.log(`[Relay] Gemini Live WebSocket closed: ${code} ${reasonStr}`)
-      safeSendClient({ type: 'close', code, reason: reasonStr })
-    })
-
-    // Messages from Browser Client
-    clientWs.on('message', (message) => {
-      resetIdleTimer()
-      try {
-        const msg = JSON.parse(message.toString('utf-8'))
-
-        // 1. Audio input stream (16kHz PCM Base64 chunks)
-        if (msg.type === 'audio' && msg.data) {
-          if (isGeminiReady) {
-            safeSendGemini({
-              realtimeInput: {
-                mediaChunks: [
-                  {
-                    mimeType: 'audio/pcm;rate=16000',
-                    data: msg.data
-                  }
-                ]
-              }
-            })
-          }
-          return
-        }
-
-        // 2. Text input query (fallback or mixed conversation)
-        if (msg.type === 'text' && msg.text) {
-          console.log('[Relay] Forwarding user text turn to Gemini:', msg.text)
-          if (isGeminiReady) {
-            safeSendGemini({
-              clientContent: {
-                turns: [
-                  {
-                    role: 'user',
-                    parts: [{ text: msg.text }]
-                  }
-                ],
-                turnComplete: true
-              }
-            })
-          }
-          return
-        }
-
-        // 3. User explicit tap-to-interrupt
-        if (msg.type === 'interrupt') {
-          console.log('[Relay] User requested explicit interrupt.')
-          return
-        }
-
-        // 4. User explicit hard session termination
-        if (msg.type === 'end_session') {
-          console.log('[Relay] Received explicit end_session from client. Terminating Gemini Live session.')
-          cleanup()
-          if (clientWs.readyState === WebSocket.OPEN) {
-            clientWs.close(1000, 'Session ended by user')
-          }
-          return
-        }
-      } catch (err) {
-        console.error('[Relay] Error parsing client message:', err)
-      }
-    })
-
-    clientWs.on('close', () => {
-      console.log('[Relay] Browser client disconnected.')
-      cleanup()
-    })
-
-    clientWs.on('error', (err) => {
-      console.error('[Relay] Client WebSocket error:', err)
-      cleanup()
-    })
-  })
-
-  return wss
-}
-
-// Check if running as standalone CLI script
-const isDirectExecution = process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]
-
-if (isDirectExecution) {
-  const PORT = parseInt(process.env.PORT || '3001', 10)
-  const GEMINI_API_KEY = (process.env.GEMINI_API_KEY || '').trim()
-
-  if (!GEMINI_API_KEY) {
-    console.warn('[Relay Warning] GEMINI_API_KEY environment variable is not set in process.env!')
-    console.warn('Clients will receive an error unless GEMINI_API_KEY is provided.')
-  }
-
-  const server = http.createServer(async (req, res) => {
-    if (req.url === '/health' || req.url === '/') {
-      res.writeHead(200, { 'Content-Type': 'application/json' })
-      res.end(JSON.stringify({
-        status: 'online',
-        service: 'WeatherGPT Voice Relay',
-        model: MODEL_NAME,
-        timestamp: new Date().toISOString()
-      }))
-      return
-    }
-
-    if (req.url === '/api/live-layers/usgs-quakes') {
-      try {
-        const { fetchUsgsQuakes } = await import('../tools/liveData/fetchUsgsQuakes.ts')
-        const data = await fetchUsgsQuakes()
-        res.writeHead(200, {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Cache-Control': 'public, max-age=60'
-        })
-        res.end(JSON.stringify(data))
-      } catch (err) {
-        res.writeHead(500, { 'Content-Type': 'application/json' })
-        res.end(JSON.stringify({ error: 'Failed to fetch earthquakes', message: err.message }))
-      }
-      return
-    }
-
-    res.writeHead(404)
-    res.end()
-  })
-
-  attachVoiceRelay(server)
-
-  server.listen(PORT, () => {
-    console.log('====================================================')
-    console.log(` WeatherGPT Voice Relay Server running on port ${PORT}`)
-    console.log(` Endpoint: ws://localhost:${PORT}`)
-    console.log(` Target Model: ${MODEL_NAME}`)
-    console.log('====================================================')
-  })
-
-  process.on('uncaughtException', (err) => {
-    console.warn('[Relay] Uncaught exception recovered safely:', err?.message || err)
-  })
-
-  process.on('unhandledRejection', (reason) => {
-    console.warn('[Relay] Unhandled rejection recovered safely:', reason)
-  })
-}

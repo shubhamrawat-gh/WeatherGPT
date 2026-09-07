@@ -1,8 +1,10 @@
 import SEO from '../../components/SEO'
 import { BarChart3, TrendingUp, CloudRain, Thermometer } from 'lucide-react'
 import { CLIMATE_TRENDS, REGIONAL_CLIMATE_STATS } from '../../data/weatherMockData'
+import { useLanguage } from '../../context/LanguageContext'
 
 export default function ClimatePage() {
+  const { t } = useLanguage()
   const maxRain = Math.max(...CLIMATE_TRENDS.map((t) => Math.max(t.actualRainfall, t.normalRainfall)))
 
   return (
@@ -18,12 +20,12 @@ export default function ClimatePage() {
           <div className="flex items-center gap-3">
             <BarChart3 className="w-4 h-4 text-brand-green" />
             <h1 className="text-xs font-semibold dark:text-white text-slate-900 tracking-wide">
-              Climate Analytics &amp; Monsoon Ledger
+              {t('climate.title')}
             </h1>
           </div>
 
           <div className="text-[11px] font-mono dark:text-slate-400 text-slate-600">
-            Season: Southwest Monsoon (Kharif) · Baseline: 1971–2020 LPA
+            {t('climate.season')}
           </div>
         </div>
 
@@ -35,34 +37,34 @@ export default function ClimatePage() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="p-4 rounded-xl dark:bg-[#121212] bg-white border dark:border-white/[0.08] border-slate-200 flex flex-col gap-1.5 shadow-xs">
                 <div className="flex items-center justify-between dark:text-slate-400 text-slate-500">
-                  <span className="text-[10px] font-mono uppercase tracking-wider">All-India Monsoon LPA</span>
+                  <span className="text-[10px] font-mono uppercase tracking-wider">{t('climate.lpaTitle')}</span>
                   <CloudRain className="w-4 h-4 text-brand-green" />
                 </div>
                 <div className="text-2xl font-bold font-mono dark:text-white text-slate-900 mt-1">104.2%</div>
                 <span className="text-[11px] text-brand-green font-mono">
-                  +4.2% Departure (Normal Category)
+                  {t('climate.lpaSub')}
                 </span>
               </div>
 
               <div className="p-4 rounded-xl dark:bg-[#121212] bg-white border dark:border-white/[0.08] border-slate-200 flex flex-col gap-1.5 shadow-xs">
                 <div className="flex items-center justify-between dark:text-slate-400 text-slate-500">
-                  <span className="text-[10px] font-mono uppercase tracking-wider">Annual Mean Temp Anomaly</span>
+                  <span className="text-[10px] font-mono uppercase tracking-wider">{t('climate.anomalyTitle')}</span>
                   <Thermometer className="w-4 h-4 text-amber-400" />
                 </div>
                 <div className="text-2xl font-bold font-mono dark:text-white text-slate-900 mt-1">+0.54°C</div>
                 <span className="text-[11px] text-amber-500 font-mono">
-                  Above normal baseline trend
+                  {t('climate.anomalySub')}
                 </span>
               </div>
 
               <div className="p-4 rounded-xl dark:bg-[#121212] bg-white border dark:border-white/[0.08] border-slate-200 flex flex-col gap-1.5 shadow-xs">
                 <div className="flex items-center justify-between dark:text-slate-400 text-slate-500">
-                  <span className="text-[10px] font-mono uppercase tracking-wider">Active Subdivisions</span>
+                  <span className="text-[10px] font-mono uppercase tracking-wider">{t('climate.subdivisionsTitle')}</span>
                   <TrendingUp className="w-4 h-4 text-blue-400" />
                 </div>
                 <div className="text-2xl font-bold font-mono dark:text-white text-slate-900 mt-1">28 / 36</div>
                 <span className="text-[11px] dark:text-slate-400 text-slate-500 font-mono">
-                  Normal to Excess rainfall receipt
+                  {t('climate.subdivisionsSub')}
                 </span>
               </div>
             </div>

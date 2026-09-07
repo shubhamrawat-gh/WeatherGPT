@@ -1,7 +1,8 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { X, MessagesSquare, Radar, ShieldAlert, AreaChart, SlidersHorizontal, CloudRain, Sun, Moon } from 'lucide-react'
+import { X, MessagesSquare, Radar, ShieldAlert, AreaChart, SlidersHorizontal, CloudRain, Sun, Moon, Globe } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { useTheme } from '../../context/ThemeContext'
+import { useLanguage, SUPPORTED_LANGUAGES } from '../../context/LanguageContext'
 
 interface MobileDrawerProps {
   isOpen: boolean
@@ -11,6 +12,7 @@ interface MobileDrawerProps {
 export default function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
   const location = useLocation()
   const { isDark, toggleTheme } = useTheme()
+  const { currentLanguage, setLanguage, t } = useLanguage()
 
   return (
     <AnimatePresence>
@@ -50,6 +52,26 @@ export default function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
                 </button>
               </div>
 
+              {/* Language Selector */}
+              <div className="mb-3 px-2 py-2 rounded-lg bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <Globe className="w-3.5 h-3.5 text-brand-green shrink-0" />
+                  <span className="font-medium text-slate-700 dark:text-slate-300">Language</span>
+                </div>
+                <select
+                  value={currentLanguage.code}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  className="bg-transparent border-0 text-slate-900 dark:text-white font-semibold text-xs focus:outline-hidden cursor-pointer"
+                  title="Select Regional Language"
+                >
+                  {SUPPORTED_LANGUAGES.map((lang) => (
+                    <option key={lang.code} value={lang.code} className="bg-white dark:bg-[#121212] text-slate-900 dark:text-white">
+                      {lang.nativeName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               {/* Primary Links */}
               <div className="flex flex-col gap-1 text-xs mb-3">
                 <Link
@@ -60,7 +82,7 @@ export default function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
                   }`}
                 >
                   <MessagesSquare className="w-4 h-4 text-brand-green" />
-                  <span>Chats</span>
+                  <span>{t('sidebar.chats')}</span>
                 </Link>
 
                 <Link
@@ -71,7 +93,7 @@ export default function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
                   }`}
                 >
                   <Radar className="w-4 h-4 text-brand-green" />
-                  <span>Live Weather Map</span>
+                  <span>{t('sidebar.map')}</span>
                 </Link>
 
                 <Link
@@ -83,10 +105,10 @@ export default function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
                 >
                   <div className="flex items-center gap-2.5">
                     <ShieldAlert className="w-4 h-4 text-brand-green" />
-                    <span>Alerts &amp; Warnings</span>
+                    <span>{t('sidebar.alerts')}</span>
                   </div>
                   <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full border border-brand-green/30 text-brand-green bg-brand-green/10">
-                    6 Active
+                    6 {t('sidebar.activeCount')}
                   </span>
                 </Link>
 
@@ -99,7 +121,7 @@ export default function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
                 >
                   <div className="flex items-center gap-2.5">
                     <AreaChart className="w-4 h-4 text-brand-green" />
-                    <span>Climate Analytics</span>
+                    <span>{t('sidebar.climate')}</span>
                   </div>
                   <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full border border-brand-green/30 text-brand-green bg-brand-green/10">
                     LPA
@@ -114,7 +136,7 @@ export default function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
                   }`}
                 >
                   <SlidersHorizontal className="w-4 h-4 text-brand-green" />
-                  <span>Settings &amp; Units</span>
+                  <span>{t('sidebar.settings')}</span>
                 </Link>
 
                 {/* Dark / Light Mode Toggle */}
@@ -122,7 +144,7 @@ export default function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
                   type="button"
                   onClick={toggleTheme}
                   className="group flex items-center justify-between w-full px-2.5 py-2 rounded-lg transition-colors duration-120 dark:text-[#a8b3bc] text-slate-600 dark:hover:text-white hover:text-slate-900 dark:hover:bg-white/[0.06] hover:bg-slate-100 cursor-pointer"
-                  title={`Switch to ${isDark ? 'Light' : 'Dark'} Mode`}
+                  title={isDark ? t('sidebar.lightMode') : t('sidebar.darkMode')}
                 >
                   <div className="flex items-center gap-2.5">
                     {isDark ? (
@@ -130,7 +152,7 @@ export default function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
                     ) : (
                       <Sun className="w-4 h-4 text-brand-green" />
                     )}
-                    <span className="font-medium">{isDark ? 'Dark Mode' : 'Light Mode'}</span>
+                    <span className="font-medium">{isDark ? t('sidebar.darkMode') : t('sidebar.lightMode')}</span>
                   </div>
                   <div className="w-8 h-4 rounded-full dark:bg-white/[0.12] bg-slate-200 p-0.5 flex items-center transition-colors">
                     <div
@@ -152,7 +174,7 @@ export default function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
                 <div className="w-6 h-6 rounded-full bg-brand-green/20 border border-brand-green/40 text-brand-green flex items-center justify-center font-bold text-[10px] font-mono">
                   WG
                 </div>
-                <span className="text-xs font-medium">Shubham · Weather Analyst</span>
+                <span className="text-xs font-medium">Shubham · {t('sidebar.role')}</span>
               </div>
             </div>
           </motion.div>

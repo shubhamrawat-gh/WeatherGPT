@@ -38,6 +38,7 @@ interface VoiceModeHUDProps {
 // User-friendly tool labels replacing raw function identifiers
 const TOOL_LABELS: Record<string, string> = {
   get_live_weather: 'Checking Live Weather',
+  get_disaster_alerts: 'Scanning Disaster Alerts',
   get_weather_alerts: 'Scanning Hazard Bulletins',
   get_regional_climate_stats: 'Analyzing Climate Trends',
   get_agro_climate_advisory: 'Synthesizing Agro Advisory'
@@ -169,9 +170,9 @@ export const VoiceModeHUD = memo(function VoiceModeHUD({
                   ? 'bg-cyan-500/15 border border-cyan-500/30 text-cyan-300'
                   : 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-300'
               }`}
-              title={voiceMode === 'browser' ? 'Browser Web Voice AI (Client-side)' : 'Gemini Live WebSocket Relay'}
+              title={voiceMode === 'browser' ? 'WeatherGPT Web Voice (Client-side)' : 'WeatherGPT Live Real-Time Audio'}
             >
-              {voiceMode === 'browser' ? 'Browser AI' : 'Gemini Live'}
+              {voiceMode === 'browser' ? 'WeatherGPT Voice' : 'WeatherGPT Live'}
             </span>
 
             {/* Active tool badge */}

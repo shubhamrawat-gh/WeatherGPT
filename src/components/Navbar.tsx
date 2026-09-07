@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Menu, X, Sun, Moon } from 'lucide-react'
+import { Menu, X, Sun, Moon, Globe } from 'lucide-react'
 import Logo from './Logo'
 import { useTheme } from '../context/ThemeContext'
+import { useLanguage, SUPPORTED_LANGUAGES } from '../context/LanguageContext'
 
 export default function Navbar() {
   const { isDark, toggleTheme } = useTheme()
+  const { currentLanguage, setLanguage, t } = useLanguage()
   const [isScrolled, setIsScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const navigate = useNavigate()
@@ -98,30 +100,48 @@ export default function Navbar() {
             to="/"
             className="text-sm font-medium text-muted-dark hover:text-[#00ed64] transition-colors duration-200"
           >
-            Home
+            {t('nav.home')}
           </Link>
           <Link
             to="/features"
             className="text-sm font-medium text-muted-dark hover:text-[#00ed64] transition-colors duration-200"
           >
-            Features
+            {t('nav.features')}
           </Link>
           <Link
             to="/how-it-works"
             className="text-sm font-medium text-muted-dark hover:text-[#00ed64] transition-colors duration-200"
           >
-            How It Works
+            {t('nav.howItWorks')}
           </Link>
           <Link
             to="/contact"
             className="text-sm font-medium text-muted-dark hover:text-[#00ed64] transition-colors duration-200"
           >
-            Contact
+            {t('nav.contact')}
           </Link>
         </nav>
 
         {/* Desktop Buttons */}
         <div className="hidden md:flex items-center gap-3">
+          {/* Regional Language Dropdown */}
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-slate-300 dark:border-[#1c2333] bg-white/50 dark:bg-white/[0.04] backdrop-blur-xs text-xs font-medium text-slate-700 dark:text-slate-300">
+            <Globe className="w-3.5 h-3.5 text-brand-green shrink-0" />
+            <select
+              value={currentLanguage.code}
+              onChange={(e) => setLanguage(e.target.value)}
+              className="bg-transparent border-0 text-slate-800 dark:text-white font-medium focus:outline-hidden cursor-pointer text-xs"
+              title="Select Site Language"
+              aria-label="Select Site Language"
+            >
+              {SUPPORTED_LANGUAGES.map((lang) => (
+                <option key={lang.code} value={lang.code} className="bg-white dark:bg-[#121212] text-slate-900 dark:text-white">
+                  {lang.nativeName} ({lang.name})
+                </option>
+              ))}
+            </select>
+          </div>
+
           <a
             href="#intake"
             onClick={(e) => handleIntakeClick(e, 'report')}
@@ -149,7 +169,7 @@ export default function Navbar() {
             to="/dashboard"
             className="px-5 py-2 rounded-full text-xs font-bold bg-[#00ed64] hover:bg-[#00b545] text-[#001e2b] shadow-md shadow-[#00ed64]/10 transition-all duration-150 ease-out hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
           >
-            Dashboard
+            {t('nav.dashboard')}
           </Link>
         </div>
 
@@ -173,6 +193,25 @@ export default function Navbar() {
             className="md:hidden border-b overflow-hidden bg-canvas-dark border-hairline-dark/60"
           >
             <div className="px-6 py-6 flex flex-col gap-5">
+              {/* Mobile Language Selector */}
+              <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-white/[0.05] border border-white/[0.1] text-xs">
+                <div className="flex items-center gap-2">
+                  <Globe className="w-4 h-4 text-brand-green shrink-0" />
+                  <span className="text-muted-dark font-medium">Language</span>
+                </div>
+                <select
+                  value={currentLanguage.code}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  className="bg-transparent border-0 text-white font-semibold text-xs focus:outline-hidden cursor-pointer"
+                >
+                  {SUPPORTED_LANGUAGES.map((lang) => (
+                    <option key={lang.code} value={lang.code} className="bg-[#121212] text-white">
+                      {lang.nativeName} ({lang.name})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <a
                 href="#intake"
                 onClick={(e) => handleIntakeClick(e, 'report')}
@@ -193,28 +232,28 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="text-base font-medium transition-colors duration-200 text-muted-dark hover:text-white"
               >
-                Home
+                {t('nav.home')}
               </Link>
               <Link
                 to="/features"
                 onClick={() => setMobileMenuOpen(false)}
                 className="text-base font-medium transition-colors duration-200 text-muted-dark hover:text-white"
               >
-                Features
+                {t('nav.features')}
               </Link>
               <Link
                 to="/how-it-works"
                 onClick={() => setMobileMenuOpen(false)}
                 className="text-base font-medium transition-colors duration-200 text-muted-dark hover:text-white"
               >
-                How It Works
+                {t('nav.howItWorks')}
               </Link>
               <Link
                 to="/contact"
                 onClick={() => setMobileMenuOpen(false)}
                 className="text-base font-medium transition-colors duration-200 text-muted-dark hover:text-white"
               >
-                Contact
+                {t('nav.contact')}
               </Link>
               <div className="w-full h-px my-2 bg-hairline-dark/40" />
               <Link
@@ -222,7 +261,7 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="text-base font-medium py-1 transition-colors duration-200 text-[#00ed64] hover:text-white"
               >
-                Dashboard
+                {t('nav.dashboard')}
               </Link>
             </div>
           </motion.div>

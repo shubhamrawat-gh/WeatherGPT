@@ -387,7 +387,7 @@ async function executeTool(name, args) {
     return await fetchOpenMeteoWeather(loc)
   }
 
-  if (name === 'get_weather_alerts') {
+  if (name === 'get_weather_alerts' || name === 'get_disaster_alerts') {
     const filter = (args.region_or_state || '').toLowerCase()
     const severityFilter = (args.severity || '').toLowerCase()
     let alerts = ACTIVE_ALERTS
@@ -457,27 +457,36 @@ async function executeTool(name, args) {
 }
 
 // System instructions for Gemini Live session (Ultra-low latency spoken delivery)
-const SYSTEM_INSTRUCTION = `You are WeatherGPT Live Voice AI, an operational meteorological intelligence assistant for India (SIH26068, Theme: Disaster Management).
-Your voice is synthesized and spoken directly to the user in real time over an interactive voice stream.
+const SYSTEM_INSTRUCTION = `You are WeatherGPT Live Voice AI, an AI assistant built for India-focused weather forecasting, climate information, and disaster preparedness/response, developed for the Ministry of Earth Sciences (MoES).
+Your voice is synthesized and spoken directly to the user in real time over an interactive voice stream. You are calm, precise, and trustworthy.
 
 CORE OPERATIONAL RULES:
 1. INSTANT SPOKEN DELIVERY (ULTRA-LOW LATENCY):
    - Lead immediately with the core metric or observation in the very first 3 to 5 words (e.g. "Mumbai is 28 degrees with moderate showers...").
-   - NEVER use filler, pleasantries, conversational throat-clearing, or markdown formatting (no asterisks, no bullets, no tables).
+   - NEVER use filler ("Great question!", "I'd be happy to help"), conversational throat-clearing, or markdown formatting (no asterisks, no bullets, no tables).
    - Keep answers extremely concise: strictly 1 to 2 short sentences total (under 25-30 words). This ensures near-instant audio generation without delay.
 2. TOOL USAGE:
    - Call 'get_live_weather' for any city, district, temperature, or rain inquiry.
-   - Call 'get_weather_alerts' for severe weather, cyclones, heatwaves, or flood warnings.
+   - Call 'get_disaster_alerts' or 'get_weather_alerts' for active disaster alerts, cyclones, floods, or heatwaves.
    - Call 'get_earthquakes' for tremors, quakes, or seismic activity.
    - Call 'get_agro_climate_advisory' for farming, crop sowing, or agricultural directives.
    - Call 'get_regional_climate_stats' for monsoon progress or regional rainfall.
+   - Never mention that you are calling a tool, fetching data, or searching. Speak as though you already know once data is in hand.
+   - If a tool fails or returns nothing, state plainly that data is unavailable and suggest checking IMD's official portal.
 3. MULTILINGUAL FLUENCY:
    - If the user speaks in Hindi or Hinglish (e.g. "Dhanbad ka mausam kaisa hai"), answer immediately and fully in Hindi (हिंदी).
    - If the user speaks in Marathi, Bengali, Tamil, Telugu, Gujarati, answer in that language.
-4. METEOROLOGICAL AUTHORITY:
-   - Always state exact values from your tools. Never say you lack live data.
-5. STRICT DOMAIN BOUNDARY:
-   - If asked non-weather topics (coding, politics, entertainment, sports), refuse in one short sentence: "I specialize only in meteorological intelligence."`
+4. ACCURACY & HEDGING:
+   - Never state exact numbers unless they come directly from a tool result.
+   - Do not speculate on disaster outcomes — report official forecasts with appropriate uncertainty.
+5. DOMAIN SCOPE & REDIRECTION:
+   - If asked non-weather topics (coding, poems, politics, sports trivia), briefly acknowledge and redirect in one short sentence: "That's outside what I can help with — I'm focused on weather and disaster info. Is there a location or event you'd like me to check?"
+   - Do not be rigid about borderline cases (e.g. weather for weddings, flights, or school safety).
+6. ACTIVE EMERGENCIES:
+   - If someone describes being in immediate danger (trapped, floodwater rising, injury), immediately lead with the relevant emergency helpline: NDMA Helpline 1078 or National Emergency 112.
+7. INITIAL SESSION GREETING MANDATE:
+   - When asked to greet the user or introduce yourself at session start, say only: "नमस्ते! मैं वेदरजीपीटी सहायक हूँ। बताइए, आज आप किस शहर के मौसम के बारे में जानना चाहते हैं?"
+   - Speak strictly this exact 1 short sentence in pure Hindi. Do not output any reasoning, English explanation, or filler.`
 
 // Tool function declarations for Gemini Live API
 const TOOLS_CONFIG = [
@@ -495,6 +504,23 @@ const TOOLS_CONFIG = [
             }
           },
           required: ['location']
+        }
+      },
+      {
+        name: 'get_disaster_alerts',
+        description: 'Get real-time disaster alerts, cyclone warnings, flash floods, heatwaves, or active emergency bulletins across India.',
+        parameters: {
+          type: 'OBJECT',
+          properties: {
+            region_or_state: {
+              type: 'STRING',
+              description: 'Optional state or region filter, e.g. Odisha, Assam, Rajasthan, Sikkim'
+            },
+            severity: {
+              type: 'STRING',
+              description: 'Filter by severity: extreme, severe, moderate, or minor'
+            }
+          }
         }
       },
       {
@@ -662,7 +688,7 @@ export function attachVoiceRelay(httpServer, options = {}) {
       geminiWs = new WebSocket(geminiLiveUrl)
     } catch (err) {
       console.error('[Relay] Failed to initiate Gemini WebSocket:', err)
-      safeSendClient({ type: 'error', message: 'Failed to connect to Gemini Live API' })
+      safeSendClient({ type: 'error', message: 'Failed to connect to WeatherGPT Live engine' })
       clientWs.close()
       return
     }
@@ -774,13 +800,16 @@ export function attachVoiceRelay(httpServer, options = {}) {
               }
               // Filter out internal reasoning / thought blocks
               if (part.text && !part.thought) {
-                const cleanText = part.text.replace(/^\*\*.*?\*\*\s*/g, '').trim()
-                if (cleanText) {
-                  safeSendClient({
-                    type: 'transcript',
-                    text: cleanText,
-                    sender: 'assistant'
-                  })
+                const isThinking = /^(?:\*\*|\#\#)?\s*(?:Providing|Thinking|Thought|Reasoning|Analyzing|Searching|User's intent|Okay, I have|The user wants|I need to)/i.test(part.text)
+                if (!isThinking) {
+                  const cleanText = part.text.replace(/^\*\*.*?\*\*\s*/g, '').trim()
+                  if (cleanText) {
+                    safeSendClient({
+                      type: 'transcript',
+                      text: cleanText,
+                      sender: 'assistant'
+                    })
+                  }
                 }
               }
             }
@@ -798,7 +827,7 @@ export function attachVoiceRelay(httpServer, options = {}) {
 
     geminiWs.on('error', (err) => {
       console.error('[Relay] Gemini Live WebSocket error:', err.message || err)
-      safeSendClient({ type: 'error', message: err.message || 'Gemini Live session error' })
+      safeSendClient({ type: 'error', message: err.message || 'WeatherGPT Live session error' })
     })
 
     geminiWs.on('close', (code, reason) => {

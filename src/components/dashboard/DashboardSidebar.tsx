@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
+import { useLanguage } from '../../context/LanguageContext'
 
 interface DashboardSidebarProps {
   isOpen: boolean
@@ -32,6 +33,7 @@ export default function DashboardSidebar({
   const navigate = useNavigate()
   const { logout } = useAuth()
   const { isDark, toggleTheme } = useTheme()
+  const { t } = useLanguage()
 
   const handleLogout = async () => {
     await logout()
@@ -95,10 +97,10 @@ export default function DashboardSidebar({
             className={`group flex items-center gap-2.5 px-2.5 py-2 rounded-lg dark:hover:bg-white/[0.06] hover:bg-slate-100 dark:hover:text-white hover:text-slate-900 transition-colors ${
               location.pathname === '/dashboard' ? 'dark:bg-[#181818] bg-slate-100 dark:text-white text-slate-900 font-medium border border-brand-green/30' : 'dark:text-[#a8b3bc] text-slate-600'
             }`}
-            title="Weather AI Chats"
+            title={t('sidebar.chats')}
           >
             <MessagesSquare className="w-4 h-4 shrink-0 text-brand-green transition-transform duration-200 group-hover:scale-110" />
-            {!isCollapsed && <span className="truncate font-sans">Chats</span>}
+            {!isCollapsed && <span className="truncate font-sans">{t('sidebar.chats')}</span>}
           </Link>
 
           {/* 2. Live Weather GIS Map */}
@@ -107,10 +109,10 @@ export default function DashboardSidebar({
             className={`group flex items-center gap-2.5 px-2.5 py-2 rounded-lg dark:hover:bg-white/[0.06] hover:bg-slate-100 dark:hover:text-white hover:text-slate-900 transition-colors ${
               location.pathname === '/dashboard/map' ? 'dark:bg-[#181818] bg-slate-100 dark:text-white text-slate-900 font-medium border border-brand-green/30' : 'dark:text-[#a8b3bc] text-slate-600'
             }`}
-            title="Live Weather GIS Map"
+            title={t('sidebar.map')}
           >
             <Radar className="w-4 h-4 shrink-0 text-brand-green transition-transform duration-200 group-hover:scale-110" />
-            {!isCollapsed && <span className="truncate font-sans">Live Weather Map</span>}
+            {!isCollapsed && <span className="truncate font-sans">{t('sidebar.map')}</span>}
           </Link>
 
           {/* 3. Severe Alerts & Bulletins */}
@@ -119,15 +121,15 @@ export default function DashboardSidebar({
             className={`group flex items-center justify-between px-2.5 py-2 rounded-lg dark:hover:bg-white/[0.06] hover:bg-slate-100 dark:hover:text-white hover:text-slate-900 transition-colors ${
               location.pathname === '/dashboard/alerts' ? 'dark:bg-[#181818] bg-slate-100 dark:text-white text-slate-900 font-medium border border-brand-green/30' : 'dark:text-[#a8b3bc] text-slate-600'
             }`}
-            title="Active Severe Weather Bulletins"
+            title={t('sidebar.alerts')}
           >
             <div className="flex items-center gap-2.5 overflow-hidden">
               <ShieldAlert className="w-4 h-4 shrink-0 text-brand-green transition-transform duration-200 group-hover:scale-110" />
-              {!isCollapsed && <span className="truncate font-sans">Alerts &amp; Warnings</span>}
+              {!isCollapsed && <span className="truncate font-sans">{t('sidebar.alerts')}</span>}
             </div>
             {!isCollapsed && (
               <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full border border-brand-green/30 text-brand-green bg-brand-green/10">
-                6 Active
+                6 {t('sidebar.activeCount')}
               </span>
             )}
           </Link>
@@ -138,11 +140,11 @@ export default function DashboardSidebar({
             className={`group flex items-center justify-between px-2.5 py-2 rounded-lg dark:hover:bg-white/[0.06] hover:bg-slate-100 dark:hover:text-white hover:text-slate-900 transition-colors ${
               location.pathname === '/dashboard/climate' ? 'dark:bg-[#181818] bg-slate-100 dark:text-white text-slate-900 font-medium border border-brand-green/30' : 'dark:text-[#a8b3bc] text-slate-600'
             }`}
-            title="Monsoon & Climate Trends"
+            title={t('sidebar.climate')}
           >
             <div className="flex items-center gap-2.5 overflow-hidden">
               <AreaChart className="w-4 h-4 shrink-0 text-brand-green transition-transform duration-200 group-hover:scale-110" />
-              {!isCollapsed && <span className="truncate font-sans">Climate Analytics</span>}
+              {!isCollapsed && <span className="truncate font-sans">{t('sidebar.climate')}</span>}
             </div>
             {!isCollapsed && (
               <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full border border-brand-green/30 text-brand-green bg-brand-green/10">
@@ -157,10 +159,10 @@ export default function DashboardSidebar({
             className={`group flex items-center gap-2.5 px-2.5 py-2 rounded-lg dark:hover:bg-white/[0.06] hover:bg-slate-100 dark:hover:text-white hover:text-slate-900 transition-colors ${
               location.pathname === '/dashboard/settings' ? 'dark:bg-[#181818] bg-slate-100 dark:text-white text-slate-900 font-medium border border-brand-green/30' : 'dark:text-[#a8b3bc] text-slate-600'
             }`}
-            title="System Preferences & Units"
+            title={t('sidebar.settings')}
           >
             <SlidersHorizontal className="w-4 h-4 shrink-0 text-brand-green transition-transform duration-200 group-hover:scale-110" />
-            {!isCollapsed && <span className="truncate font-sans">Settings &amp; Units</span>}
+            {!isCollapsed && <span className="truncate font-sans">{t('sidebar.settings')}</span>}
           </Link>
 
           {/* 6. Dark / Light Mode Toggle */}
@@ -170,7 +172,7 @@ export default function DashboardSidebar({
             className={`group flex items-center justify-between w-full px-2.5 py-2 rounded-lg dark:hover:bg-white/[0.06] hover:bg-slate-100 dark:hover:text-white hover:text-slate-900 dark:text-[#a8b3bc] text-slate-600 transition-colors cursor-pointer ${
               isCollapsed ? 'justify-center px-2' : ''
             }`}
-            title={`Switch to ${isDark ? 'Light' : 'Dark'} Mode`}
+            title={isDark ? t('sidebar.lightMode') : t('sidebar.darkMode')}
             aria-label="Toggle dark mode and light mode"
           >
             <div className="flex items-center gap-2.5 overflow-hidden">
@@ -181,7 +183,7 @@ export default function DashboardSidebar({
               )}
               {!isCollapsed && (
                 <span className="truncate font-sans font-medium">
-                  {isDark ? 'Dark Mode' : 'Light Mode'}
+                  {isDark ? t('sidebar.darkMode') : t('sidebar.lightMode')}
                 </span>
               )}
             </div>
@@ -215,7 +217,7 @@ export default function DashboardSidebar({
             {!isCollapsed && (
               <div className="flex flex-col overflow-hidden">
                 <span className="text-xs dark:text-white text-slate-900 truncate font-medium leading-tight">Shubham</span>
-                <span className="text-[10px] text-[#7c8c9a] font-normal leading-tight">Weather Analyst</span>
+                <span className="text-[10px] text-[#7c8c9a] font-normal leading-tight">{t('sidebar.role')}</span>
               </div>
             )}
           </div>
@@ -225,7 +227,7 @@ export default function DashboardSidebar({
               <button
                 type="button"
                 onClick={handleLogout}
-                title="Sign Out"
+                title={t('sidebar.logout')}
                 className="w-6 h-6 rounded flex items-center justify-center text-[#7c8c9a] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
               >
                 <LogOut className="w-3.5 h-3.5" />
@@ -239,7 +241,7 @@ export default function DashboardSidebar({
             <button
               type="button"
               onClick={handleLogout}
-              title="Sign Out"
+              title={t('sidebar.logout')}
               className="w-full py-1.5 flex items-center justify-center text-[#7c8c9a] hover:text-red-400 hover:bg-red-500/10 rounded transition-colors cursor-pointer"
             >
               <LogOut className="w-3.5 h-3.5" />

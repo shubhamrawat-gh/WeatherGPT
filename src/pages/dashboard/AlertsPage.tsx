@@ -11,8 +11,10 @@ import {
 } from 'lucide-react'
 import { INITIAL_ALERTS } from '../../data/weatherMockData'
 import type { WeatherAlert } from '../../data/weatherMockData'
+import { useLanguage } from '../../context/LanguageContext'
 
 export default function AlertsPage() {
+  const { t } = useLanguage()
   const [alerts] = useState<WeatherAlert[]>(INITIAL_ALERTS)
   const [severityFilter, setSeverityFilter] = useState<string>('ALL')
   const [searchQuery, setSearchQuery] = useState('')
@@ -56,19 +58,19 @@ export default function AlertsPage() {
           <div className="flex items-center gap-3">
             <ShieldAlert className="w-4 h-4 text-red-400" />
             <h1 className="text-xs font-semibold dark:text-white text-slate-900 tracking-wide">
-              Active Severe Weather Bulletins
+              {t('alerts.title')}
             </h1>
             <span className="text-[10px] font-mono dark:text-slate-500 text-slate-600 border-l dark:border-white/[0.08] border-slate-200 pl-3">
-              Total {filteredAlerts.length} Active
+              {filteredAlerts.length} {t('sidebar.activeCount')}
             </span>
           </div>
 
           <div className="flex items-center gap-2 text-[11px] font-mono">
-            <span className="text-red-400">{stats.extreme} Extreme</span>
+            <span className="text-red-400">{stats.extreme} {t('alerts.extreme')}</span>
             <span className="dark:text-slate-600 text-slate-400">·</span>
-            <span className="text-orange-400">{stats.severe} Severe</span>
+            <span className="text-orange-400">{stats.severe} {t('alerts.severe')}</span>
             <span className="dark:text-slate-600 text-slate-400">·</span>
-            <span className="text-amber-400">{stats.moderate} Moderate</span>
+            <span className="text-amber-400">{stats.moderate} {t('alerts.moderate')}</span>
           </div>
         </div>
 
@@ -81,24 +83,30 @@ export default function AlertsPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by state, district, or hazard..."
+              placeholder={t('alerts.searchPlaceholder')}
               className="w-full h-8 pl-9 pr-3 rounded-lg dark:bg-[#121212] bg-slate-50 border dark:border-white/[0.08] border-slate-200 text-xs dark:text-white text-slate-900 dark:placeholder:text-slate-500 placeholder:text-slate-400 focus:outline-none focus:border-brand-green transition-colors"
             />
           </div>
 
           {/* Severity Filter Tabs */}
           <div className="flex items-center gap-1 w-full sm:w-auto overflow-x-auto">
-            {['ALL', 'EXTREME', 'SEVERE', 'MODERATE', 'MINOR'].map((sev) => (
+            {[
+              { id: 'ALL', label: t('alerts.all') },
+              { id: 'EXTREME', label: t('alerts.extreme') },
+              { id: 'SEVERE', label: t('alerts.severe') },
+              { id: 'MODERATE', label: t('alerts.moderate') },
+              { id: 'MINOR', label: t('alerts.minor') }
+            ].map((sev) => (
               <button
-                key={sev}
-                onClick={() => setSeverityFilter(sev)}
+                key={sev.id}
+                onClick={() => setSeverityFilter(sev.id)}
                 className={`px-3 py-1 rounded-md text-[11px] font-mono font-medium transition-colors cursor-pointer ${
-                  severityFilter === sev
+                  severityFilter === sev.id
                     ? 'dark:bg-white/[0.12] bg-slate-200 dark:text-white text-slate-900 border dark:border-slate-600 border-slate-300'
                     : 'dark:text-slate-400 text-slate-600 hover:text-slate-900 dark:hover:text-slate-200 border border-transparent'
                 }`}
               >
-                {sev}
+                {sev.label}
               </button>
             ))}
           </div>

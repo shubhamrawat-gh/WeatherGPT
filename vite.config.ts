@@ -56,6 +56,49 @@ function liveLayersPlugin(): Plugin {
           res.end(JSON.stringify({ error: 'Failed to fetch USGS earthquakes', details: errMsg }))
         }
       })
+
+      // Connect middleware for Live Weather Web Search (Google News RSS proxy)
+      server.middlewares.use('/api/web-search', async (req, res) => {
+        if (req.method !== 'GET') {
+          res.statusCode = 405
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify({ error: 'Method Not Allowed' }))
+          return
+        }
+
+        try {
+          const url = new URL(req.url || '', 'http://localhost')
+          const q = url.searchParams.get('q') || 'India weather news IMD alert'
+          const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(q)}&hl=en-IN&gl=IN&ceid=IN:en`
+
+          const upstreamRes = await fetch(rssUrl, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            }
+          })
+
+          if (!upstreamRes.ok) {
+            res.statusCode = upstreamRes.status
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ error: `Upstream error ${upstreamRes.status}` }))
+            return
+          }
+
+          const xml = await upstreamRes.text()
+          const { parseGoogleNewsXml } = await import('./src/services/searchService.ts')
+          const results = parseGoogleNewsXml(xml, 5)
+
+          res.statusCode = 200
+          res.setHeader('Content-Type', 'application/json')
+          res.setHeader('Cache-Control', 'public, max-age=120')
+          res.end(JSON.stringify({ query: q, count: results.length, results }))
+        } catch (err: unknown) {
+          const errMsg = err instanceof Error ? err.message : String(err)
+          res.statusCode = 500
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify({ error: 'Web search failed', details: errMsg }))
+        }
+      })
     }
   }
 }

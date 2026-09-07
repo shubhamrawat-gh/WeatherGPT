@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import SEO from '../../components/SEO'
-import { Settings, Check, Radio, Bell, Globe2, Save, Sun, Moon, Mic } from 'lucide-react'
+import { Settings, Check, Radio, Bell, Globe2, Save, Sun, Moon, Mic, Languages } from 'lucide-react'
 import { useTheme } from '../../context/ThemeContext'
+import { useLanguage, SUPPORTED_LANGUAGES } from '../../context/LanguageContext'
 
 export default function SettingsPage() {
   const { theme, isDark, setTheme } = useTheme()
+  const { currentLanguage, setLanguage, t } = useLanguage()
   const [tempUnit, setTempUnit] = useState<'celsius' | 'fahrenheit'>('celsius')
   const [rainUnit, setRainUnit] = useState<'mm' | 'inches'>('mm')
   const [windUnit, setWindUnit] = useState<'kmh' | 'knots' | 'ms'>('kmh')
@@ -47,7 +49,7 @@ export default function SettingsPage() {
           <div className="flex items-center gap-3">
             <Settings className="w-4 h-4 text-brand-green" />
             <h1 className="text-xs font-semibold dark:text-white text-slate-900 tracking-wide">
-              Console &amp; Telemetry Settings
+              {t('settings.title')}
             </h1>
           </div>
         </div>
@@ -56,14 +58,54 @@ export default function SettingsPage() {
         <div className="flex-1 overflow-y-auto p-4 md:p-8">
           <form onSubmit={handleSave} className="max-w-2xl mx-auto flex flex-col gap-6">
             
+            {/* Regional Language & Multilingual AI */}
+            <div className="p-5 rounded-xl dark:bg-[#121212] bg-white border dark:border-white/[0.08] border-slate-200 flex flex-col gap-4 shadow-xs">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 dark:text-white text-slate-900 font-semibold text-xs tracking-tight">
+                  <Languages className="w-4 h-4 text-brand-green" />
+                  <span>{t('settings.langTitle')}</span>
+                </div>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-brand-green/10 text-brand-green border border-brand-green/20">
+                  12 REGIONAL LANGUAGES
+                </span>
+              </div>
+              <p className="text-xs dark:text-slate-400 text-slate-600">
+                {t('settings.langDesc')}
+              </p>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 text-xs">
+                {SUPPORTED_LANGUAGES.map((lang) => {
+                  const isSelected = currentLanguage.code === lang.code
+                  return (
+                    <button
+                      key={lang.code}
+                      type="button"
+                      onClick={() => setLanguage(lang.code)}
+                      className={`p-2.5 rounded-lg border text-left flex flex-col gap-0.5 transition-all cursor-pointer ${
+                        isSelected
+                          ? 'border-brand-green bg-brand-green/10 dark:text-white text-slate-900 font-medium shadow-xs'
+                          : 'dark:border-white/[0.08] border-slate-200 dark:bg-[#0a0a0a] bg-slate-50 dark:text-slate-400 text-slate-600 dark:hover:text-white hover:text-slate-900 dark:hover:border-white/[0.2] hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-xs dark:text-white text-slate-900">{lang.nativeName}</span>
+                        {isSelected && <Check className="w-3 h-3 text-brand-green" />}
+                      </div>
+                      <span className="text-[10px] dark:text-slate-400 text-slate-500 font-mono">{lang.name} ({lang.code.toUpperCase()})</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
             {/* Theme & Visual Appearance */}
             <div className="p-5 rounded-xl dark:bg-[#121212] bg-white border dark:border-white/[0.08] border-slate-200 flex flex-col gap-4 shadow-xs">
               <div className="flex items-center gap-2 dark:text-white text-slate-900 font-semibold text-xs tracking-tight">
                 {isDark ? <Moon className="w-4 h-4 text-brand-green" /> : <Sun className="w-4 h-4 text-brand-green" />}
-                <span>Theme &amp; Visual Appearance</span>
+                <span>{t('settings.themeTitle')}</span>
               </div>
               <p className="text-xs dark:text-slate-400 text-slate-600">
-                Choose between high-contrast dark operations console, clean daylight mode, or automatic system sync.
+                {t('settings.themeDesc')}
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
@@ -78,7 +120,7 @@ export default function SettingsPage() {
                 >
                   <Moon className="w-4 h-4 text-brand-green shrink-0" />
                   <div className="flex flex-col text-left">
-                    <span className="font-semibold text-xs dark:text-white text-slate-900">Dark Mode</span>
+                    <span className="font-semibold text-xs dark:text-white text-slate-900">{t('settings.dark')}</span>
                     <span className="text-[10px] dark:text-slate-400 text-slate-500">Tactical Night Console</span>
                   </div>
                 </button>
@@ -94,7 +136,7 @@ export default function SettingsPage() {
                 >
                   <Sun className="w-4 h-4 text-brand-green shrink-0" />
                   <div className="flex flex-col text-left">
-                    <span className="font-semibold text-xs dark:text-white text-slate-900">Light Mode</span>
+                    <span className="font-semibold text-xs dark:text-white text-slate-900">{t('settings.light')}</span>
                     <span className="text-[10px] dark:text-slate-400 text-slate-500">Daylight High Visibility</span>
                   </div>
                 </button>
@@ -246,7 +288,7 @@ export default function SettingsPage() {
                 </span>
               </div>
               <p className="text-xs dark:text-slate-400 text-slate-600 leading-relaxed">
-                Choose between serverless client-side Web Voice (runs anywhere without a backend) or high-fidelity Gemini Live bi-directional audio streaming via WebSocket relay.
+                Choose between serverless client-side Web Voice (runs anywhere without a backend) or high-fidelity WeatherGPT Live bi-directional audio streaming via WebSocket relay.
               </p>
 
               <div className="flex flex-col gap-3 text-xs">
@@ -260,9 +302,9 @@ export default function SettingsPage() {
                     onChange={(e) => setVoiceModePref(e.target.value as any)}
                     className="h-8 px-2.5 rounded-lg dark:bg-[#0a0a0a] bg-slate-50 border dark:border-white/[0.08] border-slate-200 text-xs dark:text-white text-slate-900 focus:outline-none focus:border-brand-green"
                   >
-                    <option value="auto">Auto (Gemini Live Relay with Web Speech AI fallback)</option>
+                    <option value="auto">Auto (WeatherGPT Live Relay with Web Speech AI fallback)</option>
                     <option value="browser">Browser Web Voice AI (Client-side, zero backend needed)</option>
-                    <option value="relay">Gemini Live WebSocket Relay (Requires hosted server)</option>
+                    <option value="relay">WeatherGPT Live WebSocket Relay (Requires hosted server)</option>
                   </select>
                 </div>
 
@@ -332,7 +374,7 @@ export default function SettingsPage() {
               <span className="text-xs text-slate-500 font-mono">
                 {saved && (
                   <span className="text-brand-green flex items-center gap-1">
-                    <Check className="w-3.5 h-3.5" /> Preferences saved successfully
+                    <Check className="w-3.5 h-3.5" /> {t('settings.saved')}
                   </span>
                 )}
               </span>
@@ -342,7 +384,7 @@ export default function SettingsPage() {
                 className="btn-primary"
               >
                 <Save className="w-3.5 h-3.5" />
-                <span>Save Changes</span>
+                <span>{t('settings.saveButton')}</span>
               </button>
             </div>
           </form>

@@ -271,8 +271,8 @@ export default function FeaturesPage() {
                 <div className="col-span-3 border-l border-[#1c2d38] p-4 flex flex-col gap-4 bg-[#001e2b]/35 text-left select-none">
                   <div>
                     <div className="text-[9px] font-bold text-[#a8b3bc]/70 tracking-widest font-mono flex items-center gap-1.5 mb-2.5">
-                      <Brain className="w-3.5 h-3.5 text-indigo-400" />
-                      <span>GEMINI INTELLIGENCE</span>
+                      <Brain className="w-3.5 h-3.5 text-brand-green" />
+                      <span>WEATHERGPT INTELLIGENCE</span>
                     </div>
                     <div className="font-mono text-[9px] text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-1.5 rounded mb-3">
                       L4 STATUS ANALYSIS

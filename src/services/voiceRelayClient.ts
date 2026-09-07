@@ -60,6 +60,11 @@ export class VoiceRelayClient {
   private browserSpeechSilenceTimer: ReturnType<typeof setTimeout> | null = null
   private browserLastTranscript = ''
   private assistantAudioPulseTimer: ReturnType<typeof setInterval> | null = null
+  private hasGreeted = false
+
+  public resetGreeting(): void {
+    this.hasGreeted = false
+  }
 
   constructor(callbacks: VoiceRelayCallbacks) {
     this.callbacks = callbacks
@@ -91,6 +96,7 @@ export class VoiceRelayClient {
       te: 'te-IN',
       kn: 'kn-IN',
       ml: 'ml-IN',
+      or: 'or-IN',
       pa: 'pa-IN',
       as: 'as-IN'
     }
@@ -112,6 +118,7 @@ export class VoiceRelayClient {
   public async startSession(): Promise<void> {
     if (this.isSessionActive) return
     this.isSessionActive = true
+    this.hasGreeted = false
     this.reconnectAttempts = 0
     this.callbacks.onConnectionChange('connecting')
 
@@ -150,6 +157,10 @@ export class VoiceRelayClient {
     } catch (err: any) {
       console.error('[VoiceRelayClient] Session startup error:', err)
       const errorMsg = err?.message || 'Microphone access denied or audio failed.'
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        await this.startBrowserMode('Microphone permission pending')
+        return
+      }
       this.endVoiceSession(true)
       this.callbacks.onConnectionChange('error', errorMsg)
     }
@@ -191,6 +202,7 @@ export class VoiceRelayClient {
   public endVoiceSession(skipDisconnectedState = false): void {
     console.log('[VoiceRelayClient] Hard session termination initiated.')
     this.isSessionActive = false
+    this.hasGreeted = false
     this.reconnectAttempts = 0
 
     // 1. Cancel pending timers
@@ -375,6 +387,9 @@ export class VoiceRelayClient {
         this.ws.send(JSON.stringify({ type: 'text', text: text.trim() }))
       }
       this.setAgentState('thinking')
+    } else {
+      console.warn('[VoiceRelayClient] WebSocket not open when sending text. Routing to Browser Voice AI.')
+      this.processBrowserVoiceQuery(text.trim())
     }
   }
 
@@ -421,10 +436,8 @@ export class VoiceRelayClient {
     const bufferSize = 2048
     this.processorNode = this.recordAudioContext.createScriptProcessor(bufferSize, 1, 1)
 
-    // Silence gating & acoustic echo suppression parameters
-    const SILENCE_THRESHOLD_RMS = 0.008
+    // Acoustic echo suppression & barge-in threshold
     const BARGE_IN_THRESHOLD_RMS = 0.04
-    let consecutiveSilentFrames = 0
 
     this.processorNode.onaudioprocess = (event) => {
       if (!this.isSessionActive || this.isMuted) return
@@ -457,19 +470,7 @@ export class VoiceRelayClient {
         }
       }
 
-      // Smart Silence Gating: when user is silent, avoid flooding Gemini with noise frames
-      // This allows Gemini's server-side VAD to detect turn-end without several seconds of hesitation
-      if (rms < SILENCE_THRESHOLD_RMS) {
-        consecutiveSilentFrames++
-        // After 6 frames (~250ms) of silence, throttle empty frames to 1 every 8 frames (~320ms heartbeat)
-        if (consecutiveSilentFrames > 6 && consecutiveSilentFrames % 8 !== 0) {
-          return
-        }
-      } else {
-        consecutiveSilentFrames = 0
-      }
-
-      // Send PCM WebSocket packets in relay mode or direct Gemini mode
+      // Send continuous PCM WebSocket packets in relay mode or direct Gemini mode
       if (this.currentMode === 'relay' && this.ws && this.ws.readyState === WebSocket.OPEN) {
         const pcm16 = new Int16Array(downsampled.length)
         for (let i = 0; i < downsampled.length; i++) {
@@ -741,14 +742,14 @@ export class VoiceRelayClient {
       }
       ws.onerror = () => {
         if (this.ws !== ws) return
-        this.switchToBrowserMode('Direct Gemini Live connection error')
+        this.switchToBrowserMode('WeatherGPT Live connection error')
       }
       ws.onclose = () => {
         if (this.ws !== ws) return
         this.handleDisconnect()
       }
     } catch {
-      this.switchToBrowserMode('Could not initiate Direct Gemini')
+      this.switchToBrowserMode('Could not initiate WeatherGPT Live')
     }
   }
 
@@ -784,6 +785,9 @@ export class VoiceRelayClient {
           console.log('[VoiceRelayClient] Direct Gemini Live setup complete! Ready.')
           this.callbacks.onConnectionChange('connected')
           this.setAgentState('listening')
+          if (!this.hasGreeted) {
+            this.sendInitialGreeting()
+          }
           return
         }
 
@@ -874,7 +878,7 @@ export class VoiceRelayClient {
       if (msg.type === 'error') {
         console.error('[VoiceRelayClient] Server error:', msg.message)
         if ((msg.message || '').includes('GEMINI_API_KEY')) {
-          this.switchToBrowserMode('Relay GEMINI_API_KEY unconfigured')
+          this.switchToBrowserMode('Relay voice service unconfigured')
           return
         }
         this.callbacks.onConnectionChange('error', msg.message || 'Voice session error')
@@ -889,6 +893,9 @@ export class VoiceRelayClient {
       if (msg.type === 'ready') {
         console.log('[VoiceRelayClient] Relay confirmed session ready.')
         this.setAgentState('listening')
+        if (!this.hasGreeted) {
+          this.sendInitialGreeting()
+        }
         return
       }
 
@@ -998,6 +1005,34 @@ export class VoiceRelayClient {
     }
   }
 
+  private sendInitialGreeting(): void {
+    if (this.hasGreeted) return
+    this.hasGreeted = true
+
+    const greetingPrompt = 'Please greet the user warmly in Hindi: say "नमस्ते! मैं वेदरजीपीटी सहायक हूँ। बताइए, आज आप किस शहर के मौसम के बारे में जानना चाहते हैं?" and ask how you can help. Keep it strictly to this one short sentence.'
+
+    if (this.isDirectGeminiMode && this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify({
+        clientContent: {
+          turns: [
+            {
+              role: 'user',
+              parts: [{ text: greetingPrompt }]
+            }
+          ],
+          turnComplete: true
+        }
+      }))
+      this.setAgentState('thinking')
+    } else if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify({
+        type: 'text',
+        text: greetingPrompt
+      }))
+      this.setAgentState('thinking')
+    }
+  }
+
   // -----------------------------------------------------------------------------------------------
   // Browser Web Voice Mode Engine (Zero-Backend Fallback)
   // -----------------------------------------------------------------------------------------------
@@ -1018,6 +1053,33 @@ export class VoiceRelayClient {
     }
 
     this.initSpeechRecognition()
+
+    // Automatic 1-time localized greeting in Browser Voice Mode
+    if (!this.hasGreeted) {
+      this.hasGreeted = true
+      const langPrefix = (this.selectedLanguage || 'en').split('-')[0]
+      const greetings: Record<string, string> = {
+        en: 'Hello! I am WeatherGPT assistant. Which city or region would you like to inspect today?',
+        hi: 'नमस्ते! मैं वेदरजीपीटी सहायक हूँ। बताइए, आज आप किस शहर के मौसम के बारे में जानना चाहते हैं?',
+        mr: 'नमस्कार! मी वेदरजीपीटी सहाय्यक आहे. सांगा, आज आपल्याला कोणत्या शहराच्या हवामानाबद्दल जाणून घ्यायचे आहे?',
+        bn: 'নমস্কার! আমি ওয়েদারজিপিটি সহকারী। বলুন, আজ আপনি কোন শহরের আবহাওয়া সম্পর্কে জানতে চান?',
+        gu: 'નમસ્તે! હું વેધરજીપીટી સહાયક છું. જણાવો, આજે તમે કયા શહેરના હવામાન વિશે જાણવા માગો છો?',
+        ta: 'வணக்கம்! நான் வெதர்கிபிடி உதவியாளர். இன்று எந்த ஊரின் வானிலை பற்றி அறிய விரும்புகிறீர்கள்?',
+        te: 'నమస్కారం! నేను వెదర్‌జిపిటి అసిస్టెంట్‌ని. ఈరోజు మీరు ఏ నగరం వాతావరణం గురించి తెలుసుకోవాలనుకుంటున్నారు?',
+        kn: 'ನಮಸ್ಕಾರ! ನಾನು ವೆದರ್‌ಜಿಪಿಟಿ ಸಹಾಯಕ. ಇಂದು ನೀವು ಯಾವ ನಗರದ ಹವಾಮಾನ ತಿಳಿಯಲು ಬಯಸುತ್ತೀರಿ?',
+        ml: 'നമസ്കാരം! ഞാൻ വെതർജിപിടി അസിസ്റ്റന്റാണ്. ഇന്ന് ഏത് നഗരത്തിലെ കാലാവസ്ഥയാണ് അറിയേണ്ടത്?',
+        or: 'ନମସ୍କାର! ମୁଁ ୱେଦରଜିପିଟି ସହାୟକ। କୁହନ୍ତୁ, ଆଜି ଆପଣ କେଉଁ ସହରର ପାଣିପାଗ ବିଷୟରେ ଜାଣିବାକୁ ଚାହାଁନ୍ତି?',
+        pa: 'ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ! ਮੈਂ ਵੈਦਰਜੀਪੀਟੀ ਸਹਾਇਕ ਹਾਂ। ਦੱਸੋ, ਅੱਜ ਤੁਸੀਂ ਕਿਸ ਸ਼ਹਿਰ ਦੇ ਮੌਸਮ ਬਾਰੇ ਜਾਣਨਾ ਚਾਹੁੰਦੇ ਹੋ?',
+        as: 'নমস্কাৰ! মই ৱেদাৰজিপিটি সহায়ক। কওক, আজি আপুনি কোনখন চহৰৰ বতৰ সম্পৰ্কে জানিব বিচাৰে?'
+      }
+      const greeting = greetings[langPrefix] || greetings.en
+      setTimeout(() => {
+        if (this.isSessionActive) {
+          this.callbacks.onAssistantTranscript(greeting)
+          this.speakBrowserText(greeting)
+        }
+      }, 400)
+    }
   }
 
   private initSpeechRecognition(): void {
@@ -1065,22 +1127,25 @@ export class VoiceRelayClient {
             this.interrupt()
           }
 
-          // In Browser Mode: detect pause after speech to trigger thinking turn
-          if (this.currentMode === 'browser') {
-            if (this.browserSpeechSilenceTimer) {
-              clearTimeout(this.browserSpeechSilenceTimer)
-            }
-            // If final result, process instantly (250ms natural speech boundary), else 650ms
-            const pauseTime = finalText ? 250 : 650
-            this.browserSpeechSilenceTimer = setTimeout(() => {
-              this.browserSpeechSilenceTimer = null
-              if (this.browserLastTranscript && this.currentAgentState !== 'thinking' && this.currentAgentState !== 'speaking') {
-                const query = this.browserLastTranscript
-                this.browserLastTranscript = ''
+          // Trigger assistant turn after speech pause or boundary (works in both Relay & Browser mode)
+          if (this.browserSpeechSilenceTimer) {
+            clearTimeout(this.browserSpeechSilenceTimer)
+          }
+          // Fast 300ms turn-taking for final speech recognition, 700ms for interim
+          const pauseTime = finalText ? 300 : 700
+          this.browserSpeechSilenceTimer = setTimeout(() => {
+            this.browserSpeechSilenceTimer = null
+            if (this.browserLastTranscript && this.currentAgentState !== 'thinking' && this.currentAgentState !== 'speaking') {
+              const query = this.browserLastTranscript
+              this.browserLastTranscript = ''
+              console.log(`[VoiceRelayClient] Dispatching recognized voice query: "${query}" (Mode: ${this.currentMode})`)
+              if (this.currentMode === 'relay') {
+                this.sendText(query)
+              } else {
                 this.processBrowserVoiceQuery(query)
               }
-            }, pauseTime)
-          }
+            }
+          }, pauseTime)
         }
       }
 
@@ -1156,7 +1221,7 @@ export class VoiceRelayClient {
           { isVoice: true, maxTokens: 80 }
         )
         const timeoutPromise = new Promise<{ text: string }>((_, reject) =>
-          setTimeout(() => reject(new Error('AI response timeout')), 1800)
+          setTimeout(() => reject(new Error('AI response timeout')), 7000)
         )
         const aiResult = await Promise.race([aiPromise, timeoutPromise])
         responseText = aiResult.text

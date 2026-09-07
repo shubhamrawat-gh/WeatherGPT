@@ -5,6 +5,7 @@
  */
 
 import { fetchUsgsQuakes } from '../../tools/liveData/fetchUsgsQuakes'
+import { searchLiveWeatherWeb } from './searchService'
 
 // In-memory caches for ultra-low latency tool execution (< 1ms cache hits)
 export const weatherCache = new Map<string, { data: any; expiresAt: number }>()
@@ -357,6 +358,25 @@ export async function fetchLiveWeather(locationStr: string): Promise<any> {
 }
 
 /**
+ * Helper to fetch disaster alerts with optional region or severity filter
+ */
+export function getDisasterAlerts(regionOrState?: string, severity?: string) {
+  const filter = (regionOrState || '').toLowerCase()
+  const severityFilter = (severity || '').toLowerCase()
+  let alerts = ACTIVE_ALERTS
+  if (filter) {
+    alerts = alerts.filter(a => a.region.toLowerCase().includes(filter) || a.state.toLowerCase().includes(filter))
+  }
+  if (severityFilter) {
+    alerts = alerts.filter(a => a.severity === severityFilter)
+  }
+  return {
+    count: alerts.length,
+    alerts: alerts.length > 0 ? alerts : ACTIVE_ALERTS.slice(0, 3)
+  }
+}
+
+/**
  * Executes a tool requested by Gemini Live directly on the client
  */
 export async function executeVoiceTool(name: string, args: Record<string, any> = {}): Promise<any> {
@@ -366,20 +386,8 @@ export async function executeVoiceTool(name: string, args: Record<string, any> =
     return await fetchLiveWeather(args.location || 'Mumbai')
   }
 
-  if (name === 'get_weather_alerts') {
-    const filter = (args.region_or_state || '').toLowerCase()
-    const severityFilter = (args.severity || '').toLowerCase()
-    let alerts = ACTIVE_ALERTS
-    if (filter) {
-      alerts = alerts.filter(a => a.region.toLowerCase().includes(filter) || a.state.toLowerCase().includes(filter))
-    }
-    if (severityFilter) {
-      alerts = alerts.filter(a => a.severity === severityFilter)
-    }
-    return {
-      count: alerts.length,
-      alerts: alerts.length > 0 ? alerts : ACTIVE_ALERTS.slice(0, 3)
-    }
+  if (name === 'get_weather_alerts' || name === 'get_disaster_alerts') {
+    return getDisasterAlerts(args.region_or_state, args.severity)
   }
 
   if (name === 'get_regional_climate_stats') {
@@ -429,30 +437,79 @@ export async function executeVoiceTool(name: string, args: Record<string, any> =
     }
   }
 
+  if (name === 'web_search') {
+    try {
+      const query = String(args.query || 'India weather news IMD alert')
+      const results = await searchLiveWeatherWeb(query)
+      return {
+        query,
+        count: results.length,
+        results: results.slice(0, 3).map((r) => ({
+          title: r.title,
+          source: r.source,
+          date: r.publishedAt,
+          summary: r.snippet || r.title,
+        }))
+      }
+    } catch (err: any) {
+      return { error: `Unable to search web: ${err.message}` }
+    }
+  }
+
   return { error: `Unknown tool: ${name}` }
 }
 
-export const VOICE_SYSTEM_INSTRUCTION = `You are WeatherGPT Live Voice AI, an operational meteorological intelligence assistant for India (SIH26068, Theme: Disaster Management).
-Your voice is synthesized and spoken directly to the user in real time over an interactive voice stream.
+export function getVoiceSystemInstruction(): string {
+  const now = new Date()
+  const istDate = now.toLocaleDateString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  })
+  const istWeekday = now.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long' })
+  const istTime = now.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', timeStyle: 'short' })
+  const currentYear = now.getFullYear()
+
+  return `You are WeatherGPT Live Voice AI, an AI assistant built for India-focused weather forecasting, climate information, and disaster preparedness/response, developed for the Ministry of Earth Sciences (MoES).
+Your voice is synthesized and spoken directly to the user in real time over an interactive voice stream. You are calm, precise, and trustworthy.
+
+REAL-TIME TEMPORAL ANCHOR (CRITICAL FOR ACCURACY):
+- Current Date & Time (IST): ${istWeekday}, ${istDate} (${istTime} IST).
+- Current Year: ${currentYear}.
+- You are operating live in real-time in ${currentYear}. Under NO circumstances state or assume past years (such as 2023, 2024, or 2025) as today or current. All forecasts, dates, warnings, and weather advisories must be dated for ${currentYear} and future days.
 
 CORE OPERATIONAL RULES:
 1. INSTANT SPOKEN DELIVERY (ULTRA-LOW LATENCY):
    - Lead immediately with the core metric or observation in the very first 3 to 5 words (e.g. "Mumbai is 28 degrees with moderate showers...").
-   - NEVER use filler, pleasantries, conversational throat-clearing, or markdown formatting (no asterisks, no bullets, no tables).
+   - NEVER use filler ("Great question!", "I'd be happy to help"), conversational throat-clearing, or markdown formatting (no asterisks, no bullets, no tables).
    - Keep answers extremely concise: strictly 1 to 2 short sentences total (under 25-30 words). This ensures near-instant audio generation without delay.
 2. TOOL USAGE:
    - Call 'get_live_weather' for any city, district, temperature, or rain inquiry.
-   - Call 'get_weather_alerts' for severe weather, cyclones, heatwaves, or flood warnings.
+   - Call 'get_disaster_alerts' or 'get_weather_alerts' for severe weather, cyclones, heatwaves, or flood warnings.
+   - Call 'web_search' for real-time news headlines, recent storm developments, or breaking alerts.
    - Call 'get_earthquakes' for tremors, quakes, or seismic activity.
    - Call 'get_agro_climate_advisory' for farming, crop sowing, or agricultural directives.
    - Call 'get_regional_climate_stats' for monsoon progress or regional rainfall.
+   - Never mention that you are calling a tool, fetching data, or searching. Speak as though you already know once data is in hand.
+   - If a tool fails or returns nothing, state plainly that data is unavailable and suggest checking IMD's official portal.
 3. MULTILINGUAL FLUENCY:
    - If the user speaks in Hindi or Hinglish (e.g. "Dhanbad ka mausam kaisa hai"), answer immediately and fully in Hindi (हिंदी).
    - If the user speaks in Marathi, Bengali, Tamil, Telugu, Gujarati, answer in that language.
-4. METEOROLOGICAL AUTHORITY:
-   - Always state exact values from your tools. Never say you lack live data.
-5. STRICT DOMAIN BOUNDARY:
-   - If asked non-weather topics (coding, politics, entertainment, sports), refuse in one short sentence: "I specialize only in meteorological intelligence."`
+4. ACCURACY & HEDGING:
+   - Never state exact numbers unless they come directly from a tool result.
+   - Do not speculate on disaster outcomes — report official forecasts with appropriate uncertainty.
+5. DOMAIN SCOPE & REDIRECTION:
+   - If asked non-weather topics (coding, poems, politics, sports trivia), briefly acknowledge and redirect in one short sentence: "That's outside what I can help with — I'm focused on weather and disaster info. Is there a location or event you'd like me to check?"
+   - Do not be rigid about borderline cases (e.g. weather for weddings, flights, or school safety).
+6. ACTIVE EMERGENCIES:
+   - If someone describes being in immediate danger (trapped, floodwater rising, injury), immediately lead with the relevant emergency helpline: NDMA Helpline 1078 or National Emergency 112.
+7. INITIAL SESSION GREETING MANDATE:
+   - When asked to greet the user or introduce yourself at session start, say only: "नमस्ते! मैं वेदरजीपीटी सहायक हूँ। बताइए, आज आप किस शहर के मौसम के बारे में जानना चाहते हैं?"
+   - Speak strictly this exact 1 short sentence in pure Hindi. Do not output any reasoning, English explanation, or filler.`
+}
+
+export const VOICE_SYSTEM_INSTRUCTION = getVoiceSystemInstruction()
 
 export const VOICE_TOOLS_CONFIG = [
   {
@@ -469,6 +526,23 @@ export const VOICE_TOOLS_CONFIG = [
             }
           },
           required: ['location']
+        }
+      },
+      {
+        name: 'get_disaster_alerts',
+        description: 'Get real-time disaster alerts, cyclone warnings, flash floods, heatwaves, or active emergency bulletins across India.',
+        parameters: {
+          type: 'OBJECT',
+          properties: {
+            region_or_state: {
+              type: 'STRING',
+              description: 'Optional state or region filter, e.g. Odisha, Assam, Rajasthan, Sikkim'
+            },
+            severity: {
+              type: 'STRING',
+              description: 'Filter by severity: extreme, severe, moderate, or minor'
+            }
+          }
         }
       },
       {
@@ -525,6 +599,20 @@ export const VOICE_TOOLS_CONFIG = [
               description: 'Optional region, state, or location name, e.g. Assam, Delhi, Gujarat, Hindu Kush'
             }
           }
+        }
+      },
+      {
+        name: 'web_search',
+        description: 'Search live news, real-time IMD bulletins, and recent weather and disaster headlines across India.',
+        parameters: {
+          type: 'OBJECT',
+          properties: {
+            query: {
+              type: 'STRING',
+              description: 'Search terms, e.g. "cyclone alert Bay of Bengal" or "Mumbai rain updates"'
+            }
+          },
+          required: ['query']
         }
       }
     ]

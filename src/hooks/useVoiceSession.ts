@@ -38,8 +38,20 @@ export function useVoiceSession({ selectedLanguage = 'en', onCommitTurn }: UseVo
     const tools = [...accumulatedToolsRef.current]
 
     if (uText || aText) {
+      let finalAssistantText = aText
+      if (!finalAssistantText && tools.length > 0) {
+        const weatherTool = tools.find((t) => t.name === 'get_live_weather')
+        if (weatherTool && weatherTool.result && typeof weatherTool.result === 'object') {
+          const res = weatherTool.result as any
+          finalAssistantText = `${res.location || 'Location'}: ${res.condition || 'Current conditions'}, ${res.temperature}°C. Wind: ${res.windSpeedKmH || 15} km/h. Risk: ${res.riskLevel?.toUpperCase() || 'LOW'}.`
+        }
+      }
+      if (!finalAssistantText) {
+        finalAssistantText = 'Live meteorological advisory communicated via spoken voice.'
+      }
+
       if (onCommitTurnRef.current) {
-        onCommitTurnRef.current(uText || 'Spoken Voice Query', aText || 'Weather observation processed.', tools)
+        onCommitTurnRef.current(uText, finalAssistantText, tools)
       }
       accumulatedUserTextRef.current = ''
       accumulatedAssistantTextRef.current = ''

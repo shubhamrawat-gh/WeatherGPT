@@ -4,7 +4,6 @@ import {
   ArrowUp, 
   Copy, 
   Check, 
-  CloudRain, 
   Globe, 
   Volume2, 
   VolumeX, 
@@ -12,77 +11,40 @@ import {
   Radio, 
   Mic, 
   ChevronDown, 
-  ChevronRight 
+  ChevronRight,
+  ArrowUpRight,
+  RotateCcw
 } from 'lucide-react'
 import SEO from '../../components/SEO'
 import type { WeatherChatMessage } from '../../data/weatherMockData'
 import { 
-  SUPPORTED_LANGUAGES, 
-  generateWeatherResponse 
+  generateWeatherResponse,
+  detectLanguageFromPrompt
 } from '../../services/aiService'
+import { useLanguage, SUPPORTED_LANGUAGES } from '../../context/LanguageContext'
 import MarkdownMessage from '../../components/dashboard/MarkdownMessage'
 import { NEW_CHAT_EVENT } from '../../services/chatEvents'
 import { triggerMapNavigationFromText } from '../../services/mapEvents'
 import { useVoiceSession } from '../../hooks/useVoiceSession'
 import { VoiceModeHUD } from '../../components/voice/VoiceModeHUD'
-
-// Regional prompt sets mapped by language code
-const REGIONAL_PROMPTS: Record<string, string[]> = {
-  en: [
-    'What is the 3-day rainfall forecast for Mumbai and coastal Maharashtra?',
-    'What is the current cyclone status in the Bay of Bengal?',
-    'What agro-advisory applies to paddy sowing in Eastern India this week?',
-    'Are there any active heatwave alerts in Rajasthan or Vidarbha?'
-  ],
-  hi: [
-    'मुंबई और तटीय महाराष्ट्र के लिए अगले 3 दिनों का वर्षा पूर्वानुमान क्या है?',
-    'बंगाल की खाड़ी में सक्रिय चक्रवात की वर्तमान स्थिति क्या है?',
-    'इस सप्ताह पूर्वी भारत में धान की बुवाई के लिए क्या कृषि सलाह है?',
-    'क्या राजस्थान या विदर्भ में लू (Heatwave) की कोई सक्रिय चेतावनी है?'
-  ],
-  mr: [
-    'मुंबई आणि कोकण किनारपट्टीसाठी पुढील ३ दिवसांचा पावसाचा अंदाज काय आहे?',
-    'बंगालच्या उपसागरातील चक्रीवादळाची सद्यस्थिती काय आहे?',
-    'या आठवड्यात पूर्व भारतात भात लावणीसाठी कोणता कृषी सल्ला लागू आहे?',
-    'विदर्भ किंवा मराठवाड्यात उष्णतेच्या लाटेचा काही इशारा आहे का?'
-  ],
-  bn: [
-    'কলকাতা ও দক্ষিণবঙ্গের আগামী ৩ দিনের বৃষ্টিপাতের পূর্বাভাস কি?',
-    'বঙ্গোপসাগরে কি কোনো সক্রিয় ঘূর্ণিঝড়ের সতর্কতা রয়েছে?',
-    'এই সপ্তাহে ধান চাষের জন্য আবহাওয়া ভিত্তিক কৃষি পরামর্শ কি?',
-    'উত্তরবঙ্গের পাহাড়ি এলাকায় কি কোনো भूमिধসের সতর্কতা আছে?'
-  ],
-  gu: [
-    'ગુજરાત અને સૌરાષ્ટ્ર માટે આગામી ૩ દિવસની વરસાદની આગાહી શું છે?',
-    'અરબી સમુદ્ર અથવા બંગાળની ખાડીમાં વાવાઝોડાની સ્થિતિ શું છે?',
-    'ખરીફ પાકોની વાવણી માટે ખેડૂતો માટે શું હવામાન સલાહ છે?',
-    'ઉત્તર ગુજરાતમાં હીટવેવની શું કોઈ ચેતવણી છે?'
-  ],
-  ta: [
-    'சென்னை மற்றும் வட தமிழகத்திற்கான அடுத்த 3 நாள் மழை முன்னறிவிப்பு என்ன?',
-    'வங்கக்கடலில் ஏதேனும் புயல் சின்னம் உருவாகியுள்ளதா?',
-    'நடப்பு வாரத்தில் நெல் நடவுக்கான வேளாண் வானிலை ஆலோசனைகள் என்ன?',
-    'தமிழகத்தில் வெப்ப அலை முன்னெச்சரிக்கை ஏதேனும் உள்ளதா?'
-  ],
-  te: [
-    'హైదరాబాద్ మరియు తెలంగాణకు రాబోయే 3 రోజుల వర్ష సూచన ఏమిటి?',
-    'బంగాళాఖాతంలో తుఫాను హెచ్చరికల తాజా పరిస్థితి ఏమిటి?',
-    'ఈ వారం ఖరీఫ్ వరి సాగుకు వ్యవసాయ సలహాలు ఏమిటి?',
-    'ఆంధ్రప్రదేశ్ తీరప్రాంతంలో తీవ్రమైన గాలుల హెచ్చరికలు ఉన్నాయా?'
-  ]
-}
+import AnimatedGlitchPrompts from '../../components/dashboard/AnimatedGlitchPrompts'
 
 export default function ChatAssistant() {
+  const { currentLanguage, setLanguage, t } = useLanguage()
   const [messages, setMessages] = useState<WeatherChatMessage[]>([])
   const [inputQuery, setInputQuery] = useState('')
   const [isTyping, setIsTyping] = useState(false)
-  const [selectedLanguage, setSelectedLanguage] = useState('en')
   const [isSpeaking, setIsSpeaking] = useState<string | null>(null)
   const [progressIndex, setProgressIndex] = useState(0)
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [streamingMessage, setStreamingMessage] = useState<WeatherChatMessage | null>(null)
   const [isVoiceExpanded, setIsVoiceExpanded] = useState(false)
   const [expandedThinkingIds, setExpandedThinkingIds] = useState<Record<string, boolean>>({})
+
+  // GLM-style Model Selector
+  const [selectedModel, setSelectedModel] = useState('Mausami-V1')
+  const [isModelMenuOpen, setIsModelMenuOpen] = useState(false)
+  const [isPlusMenuOpen, setIsPlusMenuOpen] = useState(false)
 
   const toggleThinking = useCallback((id: string) => {
     setExpandedThinkingIds((prev) => ({ ...prev, [id]: !prev[id] }))
@@ -106,34 +68,52 @@ export default function ChatAssistant() {
     toggleMute: toggleVoiceMute,
     switchToBrowserMode,
   } = useVoiceSession({
-    selectedLanguage,
+    selectedLanguage: currentLanguage,
     onCommitTurn: (userText, assistantText) => {
       const now = new Date()
-      setMessages((prev) => [
-        ...prev,
-        {
+      const newMsgs: WeatherChatMessage[] = []
+      if (userText && userText.trim()) {
+        newMsgs.push({
           id: `user-${now.getTime()}`,
           sender: 'user',
-          text: userText,
+          text: userText.trim(),
           timestamp: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        },
-        {
+        })
+      }
+      if (assistantText && assistantText.trim()) {
+        newMsgs.push({
           id: `asst-${now.getTime() + 1}`,
           sender: 'assistant',
-          text: assistantText,
+          text: assistantText.trim(),
           timestamp: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        }
-      ])
+        })
+      }
+      if (newMsgs.length > 0) {
+        setMessages((prev) => [...prev, ...newMsgs])
+      }
     }
   })
 
+  // Automatically start voice session and greet in Hindi 1 time when opening Chat Assistant
+  const hasAutoStartedVoiceRef = useRef(false)
+  useEffect(() => {
+    if (!hasAutoStartedVoiceRef.current) {
+      hasAutoStartedVoiceRef.current = true
+      const timer = setTimeout(() => {
+        startVoiceSession()
+      }, 500)
+      return () => clearTimeout(timer)
+    }
+  }, [startVoiceSession])
+
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const emptyTextareaRef = useRef<HTMLTextAreaElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const streamingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isUserNearBottomRef = useRef(true)
 
-  // Non-blocking auto-scroll: respects user manual scroll position while response streams
+  // Non-blocking auto-scroll
   const handleScroll = useCallback(() => {
     if (!messagesContainerRef.current) return
     const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current
@@ -171,6 +151,9 @@ export default function ChatAssistant() {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto'
     }
+    if (emptyTextareaRef.current) {
+      emptyTextareaRef.current.style.height = 'auto'
+    }
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel()
     }
@@ -178,6 +161,7 @@ export default function ChatAssistant() {
     setIsTyping(false)
     setProgressIndex(0)
     setCopiedId(null)
+    hasAutoStartedVoiceRef.current = false
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop = 0
     }
@@ -200,10 +184,8 @@ export default function ChatAssistant() {
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputQuery(e.target.value)
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto'
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 180)}px`
-    }
+    e.target.style.height = 'auto'
+    e.target.style.height = `${Math.min(e.target.scrollHeight, 180)}px`
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -219,7 +201,7 @@ export default function ChatAssistant() {
     setTimeout(() => setCopiedId(null), 1800)
   }
 
-  // Text-To-Speech for regional audio accessibility
+  // Text-To-Speech
   const handleSpeak = (text: string, id: string) => {
     if (!('speechSynthesis' in window)) return
 
@@ -243,14 +225,16 @@ export default function ChatAssistant() {
       te: 'te-IN',
       kn: 'kn-IN',
       ml: 'ml-IN',
-      pa: 'pa-IN'
+      or: 'or-IN',
+      pa: 'pa-IN',
+      as: 'as-IN',
     }
-    utterance.lang = langMap[selectedLanguage] || 'en-IN'
+    utterance.lang = langMap[currentLanguage] || 'en-IN'
     utterance.rate = 0.95
 
     try {
       const voices = window.speechSynthesis.getVoices()
-      const targetLang = langMap[selectedLanguage] || 'en-IN'
+      const targetLang = langMap[currentLanguage] || 'en-IN'
       const femaleVoice = voices.find((v) => {
         const langMatch = v.lang.toLowerCase().replace('_', '-').startsWith(targetLang.slice(0, 2).toLowerCase())
         const nameLower = v.name.toLowerCase()
@@ -280,10 +264,10 @@ export default function ChatAssistant() {
     const text = (textToSend || inputQuery).trim()
     if (!text || isTyping) return
 
-    // Trigger map camera sync in background without re-rendering map
+    // Trigger map camera sync in background
     triggerMapNavigationFromText(text)
 
-    // If a previous stream is still in-flight, flush and commit it immediately
+    // Flush any pending stream
     if (streamingTimerRef.current && streamingMessage) {
       clearTimeout(streamingTimerRef.current)
       streamingTimerRef.current = null
@@ -306,12 +290,10 @@ export default function ChatAssistant() {
 
     setMessages((prev) => [...prev, userMsg])
     setInputQuery('')
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto'
-    }
+    if (textareaRef.current) textareaRef.current.style.height = 'auto'
+    if (emptyTextareaRef.current) emptyTextareaRef.current.style.height = 'auto'
     setIsTyping(true)
 
-    // Helper to stream chunks or display immediately if reduced-motion preferred
     const streamMessage = (msg: WeatherChatMessage) => {
       const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
       if (prefersReducedMotion) {
@@ -326,8 +308,38 @@ export default function ChatAssistant() {
       setStreamingMessage({ ...msg, text: '' })
 
       const streamChunk = () => {
-        // Natural progressive chunk streaming (~4-6 characters per 16ms tick)
-        currentIndex = Math.min(currentIndex + Math.floor(Math.random() * 3 + 4), fullText.length)
+        let nextIndex = Math.min(currentIndex + Math.floor(Math.random() * 3 + 4), fullText.length)
+
+        // Ensure markdown tables never get sliced mid-syntax (which can cause tables to flicker or re-render during typewriter effect)
+        const lastNewlineBeforeNext = fullText.lastIndexOf('\n', nextIndex)
+        if (lastNewlineBeforeNext >= currentIndex) {
+          const afterNewline = fullText.slice(lastNewlineBeforeNext + 1)
+          if (afterNewline.trimStart().startsWith('|')) {
+            const rowEnd = fullText.indexOf('\n', lastNewlineBeforeNext + 1)
+            if (rowEnd !== -1) {
+              nextIndex = rowEnd + 1
+              const sepLine = fullText.slice(nextIndex)
+              if (sepLine.trimStart().startsWith('|') && sepLine.includes('---')) {
+                const sepEnd = fullText.indexOf('\n', nextIndex)
+                if (sepEnd !== -1) {
+                  nextIndex = sepEnd + 1
+                }
+              }
+            }
+          }
+        } else {
+          const lastNewline = fullText.lastIndexOf('\n', currentIndex)
+          const lineStart = lastNewline === -1 ? 0 : lastNewline + 1
+          const line = fullText.slice(lineStart)
+          if (line.trimStart().startsWith('|')) {
+            const rowEnd = fullText.indexOf('\n', currentIndex)
+            if (rowEnd !== -1) {
+              nextIndex = rowEnd + 1
+            }
+          }
+        }
+
+        currentIndex = nextIndex
         const currentChunk = fullText.slice(0, currentIndex)
 
         setStreamingMessage({
@@ -347,8 +359,13 @@ export default function ChatAssistant() {
       streamingTimerRef.current = setTimeout(streamChunk, 16)
     }
 
+    const detectedLang = detectLanguageFromPrompt(text, currentLanguage)
+    if (detectedLang && detectedLang !== currentLanguage) {
+      setLanguage(detectedLang)
+    }
+
     try {
-      const aiResult = await generateWeatherResponse(text, currentHistory, selectedLanguage)
+      const aiResult = await generateWeatherResponse(text, currentHistory, detectedLang)
       const resTime = new Date()
 
       const assistantMsg: WeatherChatMessage = {
@@ -366,17 +383,28 @@ export default function ChatAssistant() {
       const fallbackMsg: WeatherChatMessage = {
         id: `asst-${fallbackTime.getTime()}`,
         sender: 'assistant',
-        text: selectedLanguage === 'hi' 
+        text: detectedLang === 'hi' 
           ? 'मौसम अवलोकन प्रणाली सामान्य रूप से कार्यरत है। विशिष्ट शहर या मौसम घटना के लिए विवरण पूछें।'
+          : detectedLang === 'mr'
+          ? 'हवामान निरीक्षण प्रणाली सुरळीतपणे कार्यरत आहे. कृपया विशिष्ट शहर किंवा हवामान घटनेबाबत विचारा.'
+          : detectedLang === 'bn'
+          ? 'আবহাওয়া পর্যবেক্ষণ ব্যবস্থা সক্রিয় রয়েছে। বিস্তারিত জানার জন্য যেকোনো শহর বা জেলা উল্লেখ করুন।'
           : 'Weather observation feeds are operating normally. Please specify an Indian city, district, or meteorological event for detailed intelligence.',
         timestamp: fallbackTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       }
       streamMessage(fallbackMsg)
     }
-  }, [inputQuery, isTyping, streamingMessage, messages, selectedLanguage])
+  }, [inputQuery, isTyping, streamingMessage, messages, currentLanguage, setLanguage])
 
-  const activePrompts = REGIONAL_PROMPTS[selectedLanguage] || REGIONAL_PROMPTS.en
-  const currentLangObj = SUPPORTED_LANGUAGES.find((l) => l.code === selectedLanguage) || SUPPORTED_LANGUAGES[0]
+  // Close menus when clicking outside
+  useEffect(() => {
+    const handleWindowClick = () => {
+      setIsModelMenuOpen(false)
+      setIsPlusMenuOpen(false)
+    }
+    window.addEventListener('click', handleWindowClick)
+    return () => window.removeEventListener('click', handleWindowClick)
+  }, [])
 
   return (
     <>
@@ -385,27 +413,109 @@ export default function ChatAssistant() {
         description="Conversational meteorological forecasting, severe alerts, and climate intelligence across Indian regional languages."
       />
 
-      <div className="flex flex-col h-full w-full dark:bg-[#0a0a0a] bg-[#f8fafc] dark:text-[#f0f4f8] text-slate-800 font-sans antialiased">
+      <div className="flex flex-col h-full w-full dark:bg-[#0c0c0f] bg-[#f8fafc] dark:text-[#f0f4f8] text-slate-800 font-sans antialiased overflow-hidden select-none">
         
-        {/* Top Control Bar with Regional Language Switcher */}
-        <div className="h-10 border-b dark:border-white/[0.08] border-slate-200 px-4 md:px-6 flex items-center justify-between shrink-0 dark:bg-[#0a0a0a] bg-white z-10 text-xs">
-          <div className="flex items-center gap-2 dark:text-[#a8b3bc] text-slate-500">
-            <CloudRain className="w-3.5 h-3.5 text-brand-green" />
-            <span className="font-sans font-medium dark:text-white text-slate-900 hidden sm:inline">
-              WeatherGPT Regional Intelligence
-            </span>
+        {/* GLM-Style Minimalist Top Bar */}
+        <header className="h-12 border-b dark:border-white/[0.06] border-slate-200 px-4 sm:px-6 flex items-center justify-between shrink-0 dark:bg-[#0c0c0f] bg-white z-30">
+          {/* Top Left: Model Selector Dropdown (e.g. GLM-5.3 ⌵) */}
+          <div className="relative" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              onClick={() => setIsModelMenuOpen((v) => !v)}
+              className="flex items-center gap-1.5 text-sm font-semibold dark:text-white text-slate-900 dark:hover:text-emerald-400 hover:text-emerald-600 transition-colors cursor-pointer tracking-tight py-1"
+            >
+              <span>{selectedModel}</span>
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 dark:text-neutral-400 text-slate-500 ${isModelMenuOpen ? 'rotate-180 text-emerald-400' : ''}`} />
+            </button>
+
+            {/* Model Selection Menu */}
+            <AnimatePresence>
+              {isModelMenuOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.12 }}
+                  className="absolute left-0 mt-2 w-64 rounded-xl dark:bg-[#151518] bg-white border dark:border-white/[0.1] border-slate-200 shadow-2xl p-1.5 z-50 text-xs font-sans"
+                >
+                  <div className="px-2.5 py-1.5 text-[10px] font-mono dark:text-neutral-400 text-slate-500 uppercase tracking-wider">
+                    Meteorological LLM Engine
+                  </div>
+                  {[
+                    { id: 'Mausami-V1', label: 'Mausami-V1', desc: 'WeatherGPT Neural Core + Open-Meteo' }
+                  ].map((m) => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedModel(m.id)
+                        setIsModelMenuOpen(false)
+                      }}
+                      className={`w-full text-left px-2.5 py-2 rounded-lg transition-colors flex items-center justify-between cursor-pointer ${
+                        selectedModel === m.id
+                          ? 'dark:bg-white/[0.08] bg-slate-100 dark:text-emerald-400 text-emerald-600 font-medium'
+                          : 'dark:text-neutral-300 text-slate-700 dark:hover:bg-white/[0.04] hover:bg-slate-50'
+                      }`}
+                    >
+                      <div>
+                        <div className="font-medium">{m.label}</div>
+                        <div className="text-[10px] dark:text-neutral-500 text-slate-400">{m.desc}</div>
+                      </div>
+                      {selectedModel === m.id && <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* New Chat Button */}
-            <button
-              onClick={handleNewChat}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-sans transition-colors duration-120 cursor-pointer border dark:bg-[#141414] bg-white dark:border-white/[0.08] border-slate-200 dark:text-[#a8b3bc] text-slate-700 dark:hover:text-white hover:text-slate-900 dark:hover:border-white/[0.16] hover:border-slate-300 shadow-xs"
-              title="Start a new chat (resets conversation history)"
+          {/* Top Right: Official Government & Intelligence Links + Actions */}
+          <div className="flex items-center gap-3 sm:gap-4 text-xs font-sans">
+            {/* IMD Official Portal Link */}
+            <a
+              href="https://mausam.imd.gov.in"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden sm:inline-flex items-center gap-1 dark:text-neutral-400 text-slate-500 dark:hover:text-white hover:text-slate-900 transition-colors"
+              title="India Meteorological Department (https://mausam.imd.gov.in/)"
             >
-              <Plus className="w-3.5 h-3.5 text-brand-green" />
-              <span>New Chat</span>
-            </button>
+              <span>IMD</span>
+              <ArrowUpRight className="w-3.5 h-3.5 opacity-70" />
+            </a>
+
+            {/* NDMA Official Disaster Management Link */}
+            <a
+              href="https://ndma.gov.in"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden sm:inline-flex items-center gap-1 dark:text-neutral-400 text-slate-500 dark:hover:text-white hover:text-slate-900 transition-colors"
+              title="National Disaster Management Authority (https://ndma.gov.in/)"
+            >
+              <span>NDMA</span>
+              <ArrowUpRight className="w-3.5 h-3.5 opacity-70" />
+            </a>
+
+            {/* MoES Portal Link */}
+            <a
+              href="https://moes.gov.in"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden md:inline-flex items-center gap-1 dark:text-neutral-400 text-slate-500 dark:hover:text-white hover:text-slate-900 transition-colors"
+              title="Ministry of Earth Sciences, Government of India"
+            >
+              <span>MoES</span>
+              <ArrowUpRight className="w-3.5 h-3.5 opacity-70" />
+            </a>
+
+            {/* Radar Map Link */}
+            <a
+              href="/dashboard/map"
+              className="hidden sm:inline-flex items-center gap-1 dark:text-neutral-400 text-slate-500 dark:hover:text-white hover:text-slate-900 transition-colors"
+              title="Interactive Doppler Radar & Weather Map"
+            >
+              <span>Radar</span>
+              <ArrowUpRight className="w-3.5 h-3.5 opacity-70" />
+            </a>
 
             {/* Live Voice Chat Button */}
             <button
@@ -418,324 +528,452 @@ export default function ChatAssistant() {
               }}
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-sans transition-colors duration-120 cursor-pointer border shadow-xs ${
                 connectionState === 'connected'
-                  ? 'bg-brand-green/15 border-brand-green/40 text-brand-green'
+                  ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400'
                   : connectionState === 'connecting' || connectionState === 'reconnecting'
                   ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
                   : connectionState === 'error'
                   ? 'bg-red-500/10 border-red-500/30 text-red-400 hover:text-red-300'
-                  : 'dark:bg-[#141414] bg-white dark:border-white/[0.08] border-slate-200 dark:text-[#a8b3bc] text-slate-700 dark:hover:text-white hover:text-slate-900 dark:hover:border-white/[0.16] hover:border-slate-300'
+                  : 'dark:bg-[#151518] bg-white dark:border-white/[0.08] border-slate-200 dark:text-[#a8b3bc] text-slate-700 dark:hover:text-white hover:text-slate-900'
               }`}
-              title={connectionState === 'connected' ? 'Disconnect Voice Session' : connectionState === 'error' ? 'Retry Voice Session' : 'Start Live Voice AI Intelligence Session'}
+              title={connectionState === 'connected' ? 'Disconnect Voice Session' : 'Start Live Voice AI Intelligence'}
             >
-              <Radio className={`w-3.5 h-3.5 ${connectionState === 'connected' ? 'text-brand-green animate-pulse' : connectionState === 'error' ? 'text-red-400' : 'text-brand-green'}`} />
-              <span className="font-medium">
-                {connectionState === 'connected' ? 'Live Voice' : connectionState === 'connecting' || connectionState === 'reconnecting' ? 'Connecting...' : connectionState === 'error' ? 'Retry Voice' : 'Live Voice'}
+              <Radio className={`w-3.5 h-3.5 ${connectionState === 'connected' ? 'text-emerald-400 animate-pulse' : 'text-emerald-400'}`} />
+              <span className="font-medium hidden sm:inline">
+                {connectionState === 'connected' ? t('chat.liveVoice', 'Live Voice') : t('chat.voice', 'Voice')}
               </span>
             </button>
 
-            {/* Language Selector Dropdown */}
+            {/* Regional Language Selector */}
             <div className="flex items-center gap-1.5">
-              <Globe className="w-3.5 h-3.5 text-brand-green" />
+              <Globe className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
               <select
-                value={selectedLanguage}
-                onChange={(e) => setSelectedLanguage(e.target.value)}
-                className="h-7 px-2.5 rounded-lg dark:bg-[#141414] bg-white border dark:border-white/[0.08] border-slate-200 text-xs dark:text-white text-slate-900 focus:outline-none dark:focus:border-white/[0.2] focus:border-slate-400 font-sans cursor-pointer transition-colors duration-120 shadow-xs"
+                value={currentLanguage}
+                onChange={(e) => setLanguage(e.target.value)}
+                className="h-7 px-2 rounded-lg dark:bg-[#151518] bg-white border dark:border-white/[0.08] border-slate-200 text-xs dark:text-white text-slate-900 focus:outline-none dark:focus:border-white/[0.2] focus:border-slate-400 font-sans cursor-pointer transition-colors shadow-xs"
                 title="Select Regional Language"
               >
                 {SUPPORTED_LANGUAGES.map((lang) => (
-                  <option key={lang.code} value={lang.code} className="dark:bg-[#141414] bg-white dark:text-white text-slate-900">
+                  <option key={lang.code} value={lang.code} className="dark:bg-[#151518] bg-white dark:text-white text-slate-900">
                     {lang.nativeName} ({lang.name})
                   </option>
                 ))}
               </select>
             </div>
-          </div>
-        </div>
 
-        {/* Messages Scroll Area */}
-        <div ref={messagesContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto px-4 md:px-6 py-6">
-          <div className="max-w-2xl mx-auto flex flex-col gap-6">
-            
-            {messages.length === 0 && !streamingMessage ? (
-              /* Regional Empty State with subtle crossfade */
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.18, ease: 'easeOut' }}
-                className="py-14 flex flex-col items-center text-center"
+            {/* New Chat Icon (when conversation exists) */}
+            {messages.length > 0 && (
+              <button
+                onClick={handleNewChat}
+                className="p-1.5 rounded-lg dark:text-neutral-400 text-slate-500 dark:hover:text-white hover:text-slate-900 dark:hover:bg-white/[0.06] hover:bg-slate-100 transition-colors cursor-pointer"
+                title={t('chat.newChat', 'Start a new conversation')}
               >
-                <div className="w-11 h-11 rounded-xl dark:bg-[#141414] bg-white border dark:border-white/[0.08] border-slate-200 text-brand-green flex items-center justify-center mb-4 shadow-xs">
-                  <CloudRain className="w-5 h-5" />
-                </div>
+                <RotateCcw className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        </header>
 
-                <h1 className="font-sans text-xl md:text-2xl dark:text-white text-slate-900 font-semibold tracking-tight mb-2">
-                  WeatherGPT · {currentLangObj.nativeName}
-                </h1>
-                <p className="text-xs dark:text-[#a8b3bc] text-slate-600 max-w-md font-sans leading-relaxed">
-                  {selectedLanguage === 'hi' && 'मौसम पूर्वानुमान, चक्रवात चेतावनी, मानसून विश्लेषण एवं कृषि सलाह हिंदी में प्राप्त करें।'}
-                  {selectedLanguage === 'mr' && 'हवामान अंदाज, चक्रीवादळ इशारा, मान्सून प्रगती व शेती सल्ला मराठीत मिळवा.'}
-                  {selectedLanguage === 'bn' && 'আবহাওয়ার পূর্বাভাস, ঘূর্ণিঝড় সতর্কতা ও কৃষি পরামর্শ বাংলায় জানুন।'}
-                  {selectedLanguage === 'ta' && 'வானிலை முன்னறிவிப்பு, புயல் எச்சரிக்கை மற்றும் விவசாய ஆலோசனைகளை தமிழில் பெறுங்கள்.'}
-                  {selectedLanguage === 'te' && 'వాతావరణ సూచనలు, తుఫాను హెచ్చరికలు మరియు వ్యవసాయ సలహాలను తెలుగులో పొందండి.'}
-                  {selectedLanguage === 'gu' && 'હવામાનની આગાહી, વાવાઝોડાની ચેતવણી અને ખેતી સલાહ ગુજરાતીમાં મેળવો.'}
-                  {selectedLanguage === 'en' && 'Real-time forecasts, cyclonic alerts, monsoon departures, and agro-climate advisories across India.'}
-                  {!['hi', 'mr', 'bn', 'ta', 'te', 'gu', 'en'].includes(selectedLanguage) && `Ask meteorological questions in ${currentLangObj.nativeName} (${currentLangObj.name}).`}
-                </p>
+        {/* Main Content Viewport */}
+        <div className="flex-1 overflow-hidden relative flex flex-col">
 
-                {/* Dynamic Regional Suggestion Cards */}
-                <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full text-left">
-                  {activePrompts.map((query, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => handleSend(query)}
-                      className="p-3.5 rounded-xl dark:bg-[#141414] bg-white dark:hover:bg-[#1a1a1a] hover:bg-slate-50 border dark:border-white/[0.08] border-slate-200 hover:border-brand-green/40 text-left transition-colors duration-120 cursor-pointer group shadow-xs"
-                    >
-                      <p className="text-xs dark:text-[#a8b3bc] text-slate-600 dark:group-hover:text-white group-hover:text-slate-900 leading-relaxed font-sans">
-                        {query}
-                      </p>
-                    </button>
-                  ))}
-                </div>
-              </motion.div>
-            ) : (
-              /* Conversation Messages */
-              messages.map((msg) => {
-                if (msg.sender === 'user') {
-                  return (
-                    <div key={msg.id} className="flex justify-end motion-msg-entrance">
-                      <div className="max-w-xl dark:bg-[#191919] bg-brand-green/10 border dark:border-white/[0.08] border-brand-green/30 dark:text-white text-slate-900 px-4 py-2.5 rounded-2xl text-xs sm:text-sm leading-relaxed whitespace-pre-wrap font-sans">
-                        {msg.text}
+          {/* EMPTY STATE: Exactly matching the GLM screenshot with Centered Hero, Watermark & Floating Input */}
+          {messages.length === 0 && !streamingMessage ? (
+            <div className="flex-1 overflow-y-auto px-4 sm:px-6 flex flex-col justify-center items-center relative py-12">
+              
+              {/* Giant Stylized Geometric Background Watermark (Geometric "7" / Isobar facets) */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none z-0">
+                <svg
+                  className="w-[360px] h-[360px] sm:w-[540px] sm:h-[540px] dark:opacity-[0.035] opacity-[0.03] text-white"
+                  viewBox="0 0 200 200"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  {/* Outer geometric shield/polygon */}
+                  <polygon points="100,10 185,55 185,145 100,190 15,145 15,55" stroke="currentColor" strokeWidth="1" />
+                  {/* Prominent stylized geometric 7 / hurricane angle from screenshot */}
+                  <path d="M42,52 L158,52 L98,168 L84,136 L124,72 L62,72 Z" stroke="currentColor" strokeWidth="1.2" />
+                  {/* Concentric radar isobars */}
+                  <circle cx="100" cy="100" r="76" stroke="currentColor" strokeWidth="0.8" strokeDasharray="3 5" />
+                  <circle cx="100" cy="100" r="48" stroke="currentColor" strokeWidth="0.6" strokeDasharray="2 4" />
+                </svg>
+              </div>
+
+              <div className="w-full max-w-2xl mx-auto flex flex-col items-center text-center relative z-10">
+                
+                {/* Hero Headline: Simple, refined typography in one line, a bit smaller */}
+                <motion.h1 
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="font-sans font-medium text-xl sm:text-2xl dark:text-white/90 text-slate-800 tracking-tight text-center select-none mb-6 whitespace-nowrap"
+                >
+                  {t('chat.subtitle', 'How can I help you today?')}
+                </motion.h1>
+
+                {/* Floating Centered Input Card (Matches Screenshot) */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.14 }}
+                  className="w-full rounded-2xl dark:bg-[#151518]/90 bg-white border dark:border-white/[0.09] border-slate-200 shadow-2xl p-3.5 sm:p-4 text-left transition-all duration-150 focus-within:dark:border-white/[0.2] focus-within:border-slate-400"
+                >
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault()
+                      handleSend()
+                    }}
+                    className="flex flex-col"
+                  >
+                    <textarea
+                      ref={emptyTextareaRef}
+                      value={inputQuery}
+                      onChange={handleTextareaChange}
+                      onKeyDown={handleKeyDown}
+                      rows={2}
+                      placeholder={t('chat.placeholder', 'How can I help you today?')}
+                      className="w-full bg-transparent text-sm sm:text-[15px] dark:text-white text-slate-900 dark:placeholder:text-[#555d68] placeholder:text-slate-400 focus:outline-none resize-none leading-relaxed font-sans"
+                    />
+
+                    {/* Bottom Toolbar inside the Input Box */}
+                    <div className="flex items-center justify-between mt-3 pt-2 border-t dark:border-white/[0.05] border-slate-100">
+                      
+                      {/* Left: Plus Action */}
+                      <div className="flex items-center gap-2 relative">
+                        {/* Plus Button */}
+                        <div className="relative" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            type="button"
+                            onClick={() => setIsPlusMenuOpen((v) => !v)}
+                            className="w-7 h-7 rounded-lg flex items-center justify-center dark:text-neutral-400 text-slate-500 dark:hover:text-white hover:text-slate-900 dark:hover:bg-white/[0.06] hover:bg-slate-100 transition-colors cursor-pointer"
+                            title="Add Location / Coordinates / Scenarios"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </button>
+
+                          {/* Plus Context Menu */}
+                          <AnimatePresence>
+                            {isPlusMenuOpen && (
+                              <motion.div
+                                initial={{ opacity: 0, y: 4 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: 4 }}
+                                className="absolute left-0 bottom-full mb-2 w-56 rounded-xl dark:bg-[#1a1a1f] bg-white border dark:border-white/[0.1] border-slate-200 shadow-xl p-1.5 z-50 text-xs"
+                              >
+                                <div className="px-2 py-1 text-[10px] font-mono dark:text-neutral-500 text-slate-400 uppercase">
+                                  Quick Atmospheric Context
+                                </div>
+                                {[
+                                  { label: 'Delhi-NCR Weather & AQI', query: 'What is the current weather, rain chance, and AQI in Delhi-NCR today?' },
+                                  { label: 'Mumbai & Coastal Rainfall', query: 'What is the rainfall forecast for Mumbai and coastal Konkan today?' },
+                                  { label: 'Bay of Bengal Cyclonic Status', query: 'What is the current cyclone status and depression alert in Bay of Bengal?' }
+                                ].map((item, i) => (
+                                  <button
+                                    key={i}
+                                    type="button"
+                                    onClick={() => {
+                                      handleSend(item.query)
+                                      setIsPlusMenuOpen(false)
+                                    }}
+                                    className="w-full text-left px-2.5 py-1.5 rounded-md dark:hover:bg-white/[0.06] hover:bg-slate-100 dark:text-neutral-300 text-slate-700 cursor-pointer"
+                                  >
+                                    {item.label}
+                                  </button>
+                                ))}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+
                       </div>
-                    </div>
-                  )
-                }
 
-                // Assistant Message with Markdown & Audio Reading
-                return (
-                  <div key={msg.id} className="flex flex-col gap-1 dark:text-[#e2e8f0] text-slate-800 group motion-msg-entrance">
-                    {/* Collapsible Claude-style Thought Process Accordion */}
-                    {msg.thinking && (
-                      <div className="mb-1.5">
+                      {/* Right: Voice Mic and Circular Up-Arrow */}
+                      <div className="flex items-center gap-2">
+
+                        {/* Quick Mic Button */}
                         <button
                           type="button"
-                          onClick={() => toggleThinking(msg.id)}
-                          className="inline-flex items-center gap-1.5 text-[11px] dark:text-[#7c8c9a] text-slate-500 dark:hover:text-white hover:text-slate-900 transition-colors duration-120 cursor-pointer py-1 px-2 rounded-md dark:hover:bg-white/[0.04] hover:bg-slate-100 font-sans"
+                          onClick={() => {
+                            if (connectionState === 'connected' || connectionState === 'connecting') {
+                              stopVoiceSession()
+                            } else {
+                              startVoiceSession()
+                            }
+                          }}
+                          className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
+                            connectionState === 'connected'
+                              ? 'bg-emerald-500 text-black animate-pulse'
+                              : 'dark:text-neutral-400 text-slate-500 dark:hover:text-white hover:text-slate-900 dark:hover:bg-white/[0.06] hover:bg-slate-100'
+                          }`}
+                          title={connectionState === 'connected' ? 'Stop Voice' : 'Start Voice'}
                         >
-                          <span className="font-medium">
-                            {expandedThinkingIds[msg.id] ? 'Hide Thought Process' : 'Thought for a few seconds'}
-                          </span>
-                          {expandedThinkingIds[msg.id] ? (
-                            <ChevronDown className="w-3 h-3 text-[#5c6c7a]" />
-                          ) : (
-                            <ChevronRight className="w-3 h-3 text-[#5c6c7a]" />
-                          )}
+                          <Mic className="w-3.5 h-3.5" />
                         </button>
 
-                        <AnimatePresence>
-                          {expandedThinkingIds[msg.id] && (
-                            <motion.div
-                              initial={{ opacity: 0, height: 0 }}
-                              animate={{ opacity: 1, height: 'auto' }}
-                              exit={{ opacity: 0, height: 0 }}
-                              transition={{ duration: 0.18, ease: 'easeInOut' }}
-                              className="overflow-hidden"
-                            >
-                              <div className="mt-1 pl-3 pr-2 py-2 border-l dark:border-white/[0.1] border-slate-300 text-xs dark:text-[#8896a2] text-slate-600 font-mono leading-relaxed dark:bg-[#111111]/60 bg-slate-100 rounded-r-lg max-h-56 overflow-y-auto whitespace-pre-wrap">
-                                {msg.thinking}
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    )}
-
-                    <MarkdownMessage content={msg.text} />
-
-                    {/* Action Bar (Copy & Read Aloud) */}
-                    <div className="flex items-center gap-3 pt-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                      {/* Copy Button */}
-                      <button
-                        onClick={() => handleCopy(msg.text, msg.id)}
-                        className="flex items-center gap-1.5 p-1 rounded dark:text-[#7c8c9a] text-slate-500 dark:hover:text-white hover:text-slate-900 dark:hover:bg-white/[0.06] hover:bg-slate-200 transition-colors duration-120 cursor-pointer text-[11px]"
-                        title="Copy message"
-                      >
-                        <AnimatePresence mode="wait" initial={false}>
-                          {copiedId === msg.id ? (
-                            <motion.span
-                              key="copied"
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              exit={{ opacity: 0 }}
-                              transition={{ duration: 0.1 }}
-                              className="flex items-center gap-1"
-                            >
-                              <Check className="w-3.5 h-3.5 text-brand-green" />
-                              <span className="text-brand-green text-[10px] font-mono">Copied</span>
-                            </motion.span>
-                          ) : (
-                            <motion.span
-                              key="copy"
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              exit={{ opacity: 0 }}
-                              transition={{ duration: 0.1 }}
-                              className="flex items-center gap-1"
-                            >
-                              <Copy className="w-3.5 h-3.5" />
-                              <span className="text-[10px] font-mono">Copy</span>
-                            </motion.span>
-                          )}
-                        </AnimatePresence>
-                      </button>
-
-                      {/* Read Aloud Button */}
-                      {'speechSynthesis' in window && (
+                        {/* Circular Up-Arrow Button (Matches Screenshot) */}
                         <button
-                          onClick={() => handleSpeak(msg.text, msg.id)}
-                          className="flex items-center gap-1 p-1 rounded dark:text-[#7c8c9a] text-slate-500 dark:hover:text-white hover:text-slate-900 dark:hover:bg-white/[0.06] hover:bg-slate-200 transition-colors duration-120 cursor-pointer text-[11px]"
-                          title={isSpeaking === msg.id ? 'Stop reading' : 'Read aloud in regional audio'}
+                          type="submit"
+                          disabled={!inputQuery.trim() || isTyping}
+                          className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-150 cursor-pointer font-bold ${
+                            inputQuery.trim()
+                              ? 'bg-white text-black hover:bg-emerald-400 hover:text-black shadow-[0_0_12px_rgba(255,255,255,0.3)]'
+                              : 'dark:bg-[#28282e] bg-slate-200 dark:text-neutral-500 text-slate-400 disabled:opacity-40 disabled:cursor-not-allowed'
+                          }`}
+                          aria-label="Send Query"
                         >
-                          {isSpeaking === msg.id ? (
-                            <>
-                              <VolumeX className="w-3.5 h-3.5 text-red-400" />
-                              <span className="text-red-400 text-[10px] font-mono">Stop Audio</span>
-                            </>
-                          ) : (
-                            <>
-                              <Volume2 className="w-3.5 h-3.5 text-brand-green" />
-                              <span className="text-[10px] font-mono">Listen Audio</span>
-                            </>
-                          )}
+                          <ArrowUp className="w-4 h-4 stroke-[2.5]" />
                         </button>
-                      )}
+                      </div>
                     </div>
-                  </div>
-                )
-              })
-            )}
-
-            {/* Active Streaming Assistant Message */}
-            {streamingMessage && (
-              <div key={streamingMessage.id} className="flex flex-col gap-1 dark:text-[#e2e8f0] text-slate-800 group motion-msg-entrance">
-                {streamingMessage.thinking && (
-                  <div className="mb-1.5">
-                    <div className="inline-flex items-center gap-1.5 text-[11px] dark:text-[#7c8c9a] text-slate-500 py-1 px-2 rounded-md dark:bg-white/[0.02] bg-slate-100 font-sans">
-                      <span className="font-medium">Thought for a few seconds</span>
-                    </div>
-                  </div>
-                )}
-                <MarkdownMessage content={streamingMessage.text} />
-              </div>
-            )}
-
-            {/* Minimal Claude-Style Loading State: Soft Breathing Dot with Crossfading Status */}
-            <AnimatePresence mode="wait">
-              {isTyping && (
-                <motion.div
-                  key="thinking-indicator"
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, height: 0, marginTop: 0, marginBottom: 0 }}
-                  transition={{ duration: 0.18, ease: 'easeInOut' }}
-                  className="flex items-center gap-2.5 text-xs py-2 select-none overflow-hidden"
-                >
-                  <span className="w-2 h-2 rounded-full bg-brand-green/80 animate-soft-pulse shrink-0" />
-                  <AnimatePresence mode="wait">
-                    <motion.span
-                      key={progressIndex}
-                      initial={{ opacity: 0, filter: 'blur(2px)' }}
-                      animate={{ opacity: 1, filter: 'blur(0px)' }}
-                      exit={{ opacity: 0, filter: 'blur(2px)' }}
-                      transition={{ duration: 0.18, ease: 'easeInOut' }}
-                      className="dark:text-[#8896a2] text-slate-600 text-[11px] font-sans tracking-wide"
-                    >
-                      {selectedLanguage === 'hi'
-                        ? [
-                            'मौसम डेटा का समन्वय...',
-                            'डॉपलर रडार और उपग्रह विश्लेषण...',
-                            'क्षेत्रीय अलर्ट और बुलेटिन का मिलान...',
-                            'पूर्वानुमान मॉडल का संश्लेषण...',
-                            'अंतिम मौसम बुलेटिन तैयार किया जा रहा है...'
-                          ][progressIndex % 5]
-                        : [
-                            'Consulting Doppler radar telemetry...',
-                            'Scanning satellite cloud imagery...',
-                            'Cross-referencing severe weather bulletins...',
-                            'Synthesizing regional climate grids...',
-                            'Formulating meteorological intelligence...'
-                          ][progressIndex % 5]}
-                    </motion.span>
-                  </AnimatePresence>
+                  </form>
                 </motion.div>
-              )}
-            </AnimatePresence>
 
-            <div ref={messagesEndRef} />
-          </div>
-        </div>
+                {/* ADVANCED AUTONOMOUS GLITCH PROMPT CARDS (NO BUTTON, AUTO-CHANGING) */}
+                <motion.div
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.35, delay: 0.2 }}
+                  className="w-full"
+                >
+                  <AnimatedGlitchPrompts 
+                    selectedLanguage={currentLanguage} 
+                    onSelectPrompt={handleSend} 
+                  />
+                </motion.div>
 
-        {/* Minimal Claude-Style Input Dock */}
-        <div className="p-4 bg-transparent shrink-0">
-          <div className="max-w-2xl mx-auto">
-            <form
-              onSubmit={(e) => {
-                e.preventDefault()
-                handleSend()
-              }}
-              className="relative rounded-2xl dark:bg-[#141414] bg-white border dark:border-white/[0.08] border-slate-200 dark:focus-within:border-white/[0.18] focus-within:border-slate-400 transition-colors duration-150 flex items-end p-2.5 shadow-sm"
-            >
-              <textarea
-                ref={textareaRef}
-                value={inputQuery}
-                onChange={handleTextareaChange}
-                onKeyDown={handleKeyDown}
-                rows={1}
-                placeholder={
-                  selectedLanguage === 'hi'
-                    ? 'मौसम पूर्वानुमान, चक्रवात या फसल सलाह के बारे में पूछें...'
-                    : selectedLanguage === 'mr'
-                    ? 'हवामान अंदाज, वादळ किंवा शेती सल्ला विचारा...'
-                    : selectedLanguage === 'bn'
-                    ? 'আবহাওয়া বা কৃষিপরামর্শ সম্পর্কে জিজ্ঞাসা করুন...'
-                    : 'Ask about weather forecasts, cyclone alerts, or crop advisories...'
-                }
-                className="w-full pl-2 pr-10 py-1 bg-transparent text-xs sm:text-sm dark:text-white text-slate-900 dark:placeholder:text-[#5c6c7a] placeholder:text-slate-400 focus:outline-none resize-none max-h-44 leading-relaxed font-sans"
-              />
-
-              {/* Quick Voice Mic Button */}
-              <button
-                type="button"
-                onClick={() => {
-                  if (connectionState === 'connected' || connectionState === 'connecting' || connectionState === 'reconnecting') {
-                    stopVoiceSession()
-                  } else {
-                    startVoiceSession()
-                  }
-                }}
-                className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors duration-120 cursor-pointer shrink-0 ml-1 ${
-                  connectionState === 'connected'
-                    ? 'bg-brand-green text-[#001e2b] animate-pulse'
-                    : connectionState === 'error'
-                    ? 'text-red-400 hover:text-red-300 hover:bg-red-500/10'
-                    : 'dark:text-[#7c8c9a] text-slate-500 hover:text-brand-green dark:hover:bg-white/[0.06] hover:bg-slate-100'
-                }`}
-                title={connectionState === 'connected' ? 'Disconnect Voice Session' : connectionState === 'error' ? 'Retry Voice Session' : 'Start Live Voice Session'}
-                aria-label="Toggle Live Voice Session"
+              </div>
+            </div>
+          ) : (
+            
+            /* ACTIVE CHAT VIEW: Conversation Messages & Bottom Dock */
+            <>
+              <div 
+                ref={messagesContainerRef} 
+                onScroll={handleScroll} 
+                className="flex-1 overflow-y-auto px-4 md:px-6 py-6"
               >
-                <Mic className="w-4 h-4" />
-              </button>
+                <div className="max-w-2xl mx-auto flex flex-col gap-6">
+                  {messages.map((msg) => {
+                    if (msg.sender === 'user') {
+                      return (
+                        <div key={msg.id} className="flex justify-end motion-msg-entrance">
+                          <div className="max-w-xl dark:bg-[#18181c] bg-emerald-500/10 border dark:border-white/[0.08] border-emerald-500/30 dark:text-white text-slate-900 px-4 py-2.5 rounded-2xl text-xs sm:text-sm leading-relaxed whitespace-pre-wrap font-sans">
+                            {msg.text}
+                          </div>
+                        </div>
+                      )
+                    }
 
-              <button
-                type="submit"
-                disabled={!inputQuery.trim() || isTyping}
-                className="w-8 h-8 rounded-xl bg-brand-green text-[#001e2b] flex items-center justify-center hover:bg-accent-hover transition-colors duration-120 disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer shrink-0 ml-1 font-bold"
-                aria-label="Send query"
-              >
-                <ArrowUp className="w-4 h-4 stroke-[2.5]" />
-              </button>
-            </form>
-          </div>
+                    // Assistant Message
+                    return (
+                      <div key={msg.id} className="flex flex-col gap-1 dark:text-[#e2e8f0] text-slate-800 group motion-msg-entrance">
+                        {/* Collapsible Thought Process */}
+                        {msg.thinking && (
+                          <div className="mb-1.5">
+                            <button
+                              type="button"
+                              onClick={() => toggleThinking(msg.id)}
+                              className="inline-flex items-center gap-1.5 text-[11px] dark:text-[#7c8c9a] text-slate-500 dark:hover:text-white hover:text-slate-900 transition-colors duration-120 cursor-pointer py-1 px-2 rounded-md dark:hover:bg-white/[0.04] hover:bg-slate-100 font-sans"
+                            >
+                              <span className="font-medium">
+                                {expandedThinkingIds[msg.id] ? t('chat.hideThinking', 'Hide Thought Process') : t('chat.thoughtSeconds', 'Thought for a few seconds')}
+                              </span>
+                              {expandedThinkingIds[msg.id] ? (
+                                <ChevronDown className="w-3 h-3 text-[#5c6c7a]" />
+                              ) : (
+                                <ChevronRight className="w-3 h-3 text-[#5c6c7a]" />
+                              )}
+                            </button>
+
+                            <AnimatePresence>
+                              {expandedThinkingIds[msg.id] && (
+                                <motion.div
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: 'auto' }}
+                                  exit={{ opacity: 0, height: 0 }}
+                                  transition={{ duration: 0.18, ease: 'easeInOut' }}
+                                  className="overflow-hidden"
+                                >
+                                  <div className="mt-1 pl-3 pr-2 py-2 border-l dark:border-white/[0.1] border-slate-300 text-xs dark:text-[#8896a2] text-slate-600 font-mono leading-relaxed dark:bg-[#111114]/80 bg-slate-100 rounded-r-lg max-h-56 overflow-y-auto whitespace-pre-wrap">
+                                    {msg.thinking}
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        )}
+
+                        <MarkdownMessage content={msg.text} />
+
+                        {/* Action Bar (Copy & Read Aloud) */}
+                        <div className="flex items-center gap-3 pt-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                          <button
+                            onClick={() => handleCopy(msg.text, msg.id)}
+                            className="flex items-center gap-1.5 p-1 rounded dark:text-[#7c8c9a] text-slate-500 dark:hover:text-white hover:text-slate-900 dark:hover:bg-white/[0.06] hover:bg-slate-200 transition-colors cursor-pointer text-[11px]"
+                            title={t('chat.copy', 'Copy message')}
+                          >
+                            <AnimatePresence mode="wait" initial={false}>
+                              {copiedId === msg.id ? (
+                                <motion.span
+                                  key="copied"
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  exit={{ opacity: 0 }}
+                                  className="flex items-center gap-1 text-emerald-400"
+                                >
+                                  <Check className="w-3.5 h-3.5" />
+                                  <span className="text-[10px] font-mono">{t('chat.copied', 'Copied')}</span>
+                                </motion.span>
+                              ) : (
+                                <motion.span
+                                  key="copy"
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  exit={{ opacity: 0 }}
+                                  className="flex items-center gap-1"
+                                >
+                                  <Copy className="w-3.5 h-3.5" />
+                                  <span className="text-[10px] font-mono">{t('chat.copy', 'Copy')}</span>
+                                </motion.span>
+                              )}
+                            </AnimatePresence>
+                          </button>
+
+                          {'speechSynthesis' in window && (
+                            <button
+                              onClick={() => handleSpeak(msg.text, msg.id)}
+                              className="flex items-center gap-1 p-1 rounded dark:text-[#7c8c9a] text-slate-500 dark:hover:text-white hover:text-slate-900 dark:hover:bg-white/[0.06] hover:bg-slate-200 transition-colors cursor-pointer text-[11px]"
+                              title={isSpeaking === msg.id ? t('chat.stopSpeak', 'Stop speaking') : t('chat.speak', 'Read aloud')}
+                            >
+                              {isSpeaking === msg.id ? (
+                                <>
+                                  <VolumeX className="w-3.5 h-3.5 text-red-400" />
+                                  <span className="text-red-400 text-[10px] font-mono">{t('chat.stopSpeak', 'Stop Audio')}</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Volume2 className="w-3.5 h-3.5 text-emerald-400" />
+                                  <span className="text-[10px] font-mono">{t('chat.speak', 'Listen')}</span>
+                                </>
+                              )}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+
+                  {/* Active Streaming Message */}
+                  {streamingMessage && (
+                    <div key={streamingMessage.id} className="flex flex-col gap-1 dark:text-[#e2e8f0] text-slate-800 group motion-msg-entrance">
+                      {streamingMessage.thinking && (
+                        <div className="mb-1.5">
+                          <div className="inline-flex items-center gap-1.5 text-[11px] dark:text-[#7c8c9a] text-slate-500 py-1 px-2 rounded-md dark:bg-white/[0.02] bg-slate-100 font-sans">
+                            <span className="font-medium">Thought for a few seconds</span>
+                          </div>
+                        </div>
+                      )}
+                      <MarkdownMessage content={streamingMessage.text} />
+                    </div>
+                  )}
+
+                  {/* Typing Indicator */}
+                  <AnimatePresence mode="wait">
+                    {isTyping && (
+                      <motion.div
+                        key="thinking-indicator"
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.18 }}
+                        className="flex items-center gap-2.5 text-xs py-2 select-none overflow-hidden"
+                      >
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-soft-pulse shrink-0" />
+                        <span className="dark:text-[#8896a2] text-slate-600 text-[11px] font-sans tracking-wide">
+                          {t('chat.thinkingWords').split('|')[progressIndex % 4] || 'Analyzing meteorological telemetry...'}
+                        </span>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <div ref={messagesEndRef} />
+                </div>
+              </div>
+
+              {/* DOCKED BOTTOM INPUT DOCK (When chatting) */}
+              <div className="p-4 bg-transparent shrink-0">
+                <div className="max-w-2xl mx-auto">
+                  <div className="w-full rounded-2xl dark:bg-[#151518] bg-white border dark:border-white/[0.09] border-slate-200 shadow-xl p-3 text-left focus-within:dark:border-white/[0.2] focus-within:border-slate-400 transition-colors">
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault()
+                        handleSend()
+                      }}
+                      className="flex flex-col"
+                    >
+                      <textarea
+                        ref={textareaRef}
+                        value={inputQuery}
+                        onChange={handleTextareaChange}
+                        onKeyDown={handleKeyDown}
+                        rows={1}
+                        placeholder={t('chat.placeholder', 'How can I help you today?')}
+                        className="w-full bg-transparent text-sm dark:text-white text-slate-900 dark:placeholder:text-[#555d68] placeholder:text-slate-400 focus:outline-none resize-none leading-relaxed font-sans max-h-40"
+                      />
+
+                      <div className="flex items-center justify-between mt-2 pt-1.5 border-t dark:border-white/[0.05] border-slate-100">
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setIsPlusMenuOpen((v) => !v)}
+                            className="w-7 h-7 rounded-lg flex items-center justify-center dark:text-neutral-400 text-slate-500 dark:hover:text-white hover:text-slate-900 dark:hover:bg-white/[0.06] hover:bg-slate-100 transition-colors cursor-pointer"
+                            title="Add Location / Coordinates"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </button>
+
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (connectionState === 'connected' || connectionState === 'connecting') {
+                                stopVoiceSession()
+                              } else {
+                                startVoiceSession()
+                              }
+                            }}
+                            className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
+                              connectionState === 'connected'
+                                ? 'bg-emerald-500 text-black animate-pulse'
+                                : 'dark:text-neutral-400 text-slate-500 dark:hover:text-white hover:text-slate-900 dark:hover:bg-white/[0.06] hover:bg-slate-100'
+                            }`}
+                            title="Live Voice"
+                          >
+                            <Mic className="w-3.5 h-3.5" />
+                          </button>
+
+                          <button
+                            type="submit"
+                            disabled={!inputQuery.trim() || isTyping}
+                            className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer font-bold ${
+                              inputQuery.trim()
+                                ? 'bg-white text-black hover:bg-emerald-400 hover:text-black shadow-[0_0_10px_rgba(255,255,255,0.25)]'
+                                : 'dark:bg-[#28282e] bg-slate-200 dark:text-neutral-500 text-slate-400 disabled:opacity-40 disabled:cursor-not-allowed'
+                            }`}
+                            aria-label="Send Query"
+                          >
+                            <ArrowUp className="w-4 h-4 stroke-[2.5]" />
+                          </button>
+                        </div>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
         </div>
 
         {/* Real-Time Live Voice HUD Overlay */}

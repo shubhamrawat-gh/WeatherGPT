@@ -233,6 +233,50 @@
   animation: fade-cross 150ms ease-out forwards;
 }
 
+/* Advanced Cyber Glitch & Chromatic Aberration Animations (Pure Static Text-Shadow, Zero Layout Shift) */
+@keyframes glitch-chromatic {
+  0% {
+    text-shadow: -2px 0 rgba(255, 0, 85, 0.85), 2px 0 rgba(0, 255, 230, 0.85);
+  }
+  25% {
+    text-shadow: 2px 0 rgba(255, 0, 85, 0.85), -2px 0 rgba(0, 255, 230, 0.85);
+  }
+  50% {
+    text-shadow: -1.5px 0 rgba(0, 255, 230, 0.85), 1.5px 0 rgba(255, 0, 85, 0.85);
+  }
+  75% {
+    text-shadow: 1.5px 0 rgba(255, 0, 85, 0.85), -1.5px 0 rgba(0, 255, 230, 0.85);
+  }
+  100% {
+    text-shadow: none;
+  }
+}
+
+@keyframes glitch-scanline {
+  0% {
+    top: -15%;
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.9;
+  }
+  80% {
+    opacity: 0.8;
+  }
+  100% {
+    top: 115%;
+    opacity: 0;
+  }
+}
+
+.animate-glitch-chromatic {
+  animation: glitch-chromatic 240ms ease-in-out infinite;
+}
+
+.animate-glitch-scanline {
+  animation: glitch-scanline 550ms linear infinite;
+}
+
 /* Accessibility: Strict Respect for prefers-reduced-motion */
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {
@@ -242,3 +286,4 @@
     scroll-behavior: auto !important;
   }
 }
+

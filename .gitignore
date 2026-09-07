@@ -35,3 +35,6 @@ scratch*.json
 *.sln
 *.sw?
 
+# Agent IDE metadata
+.agents/
+skills-lock.json

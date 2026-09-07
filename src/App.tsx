@@ -2,6 +2,7 @@ import { RouterProvider } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { DataProvider } from './context/DataContext'
 import { ThemeProvider } from './context/ThemeContext'
+import { LanguageProvider } from './context/LanguageContext'
 import router from './routes'
 
 export default function App() {
@@ -9,7 +10,9 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <DataProvider>
-          <RouterProvider router={router} />
+          <LanguageProvider>
+            <RouterProvider router={router} />
+          </LanguageProvider>
         </DataProvider>
       </AuthProvider>
     </ThemeProvider>

@@ -12,9 +12,9 @@
 
 ## 📌 Overview
 
-**WeatherGPT** is an operational AI meteorological intelligence platform designed to deliver authoritative, hyper-localized weather forecasts, severe hazard bulletins, agro-climate advisories, and interactive geospatial telemetry across India and global territories.
+**WeatherGPT** is an operational AI meteorological intelligence platform designed to deliver authoritative, hyper-localized weather forecasts, severe hazard bulletins, agro-climate advisories, and[...]
 
-By combining real-time meteorological models (GFS, ECMWF, IMD telemetry, INSAT satellite layers) with advanced conversational AI, WeatherGPT empowers citizens, farmers, emergency responders, and regional authorities with instant, actionable climate intelligence in both English and major Indic languages (Hindi, Hinglish, Marathi, Bengali, Tamil, Telugu, Gujarati, and more).
+By combining real-time meteorological models (GFS, ECMWF, IMD telemetry, INSAT satellite layers) with advanced conversational AI, WeatherGPT empowers citizens, farmers, emergency responders, and r[...]
 
 ---
 
@@ -22,7 +22,7 @@ By combining real-time meteorological models (GFS, ECMWF, IMD telemetry, INSAT s
 
 ### 🎙️ 1. Real-Time Live Voice AI (Gemini Live API)
 - **Native Speech-to-Speech**: Spoken voice interaction with near-zero latency powered by Google's bidirectional `models/gemini-2.5-flash-native-audio-latest` model.
-- **Mid-Session Tool Calling**: Live voice agent autonomously calls WeatherGPT meteorological tools (`get_live_weather`, `get_weather_alerts`, `get_agro_climate_advisory`) mid-conversation to speak verified real-time numbers.
+- **Mid-Session Tool Calling**: Live voice agent autonomously calls WeatherGPT meteorological tools (`get_live_weather`, `get_weather_alerts`, `get_agro_climate_advisory`) mid-conversation to spea[...]
 - **ChatGPT / Claude Style Voice HUD**: Pulsing audio-reactive visualizer orb, listening/thinking/speaking state indicators, and tap-to-interrupt barge-in.
 - **Live Streaming Dual Captions**: Real-time partial transcription as you speak, with streaming assistant captions as audio plays.
 - **Secure Server-Side Relay**: `GEMINI_API_KEY` is strictly held on the backend relay (`server/relay.mjs`), never exposed to the client or browser bundle.
@@ -170,3 +170,5 @@ WeatherGPT/
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 <!-- Documentation verified: 2026-09-06 -->
+
+Small README updates — updated by shubhamrawat-gh

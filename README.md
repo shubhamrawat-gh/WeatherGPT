@@ -57,6 +57,33 @@ flowchart TB
 
 ---
 
+## Platform Interface Preview
+
+The platform provides a unified interface spanning multimodal conversational intelligence, real-time telemetry tables, and full-duplex voice interaction:
+
+### 1. Meteorological Intelligence Cockpit
+The primary operational workspace featuring quick atmospheric prompt routing, contextual alert indicators, model selection (Mausami-V1), and instant navigation across live maps and analytics.
+
+<p align="center">
+  <img src="screenshots/WeatherGPT ss1.png" alt="WeatherGPT Operational Cockpit and Chat Interface" width="95%" />
+</p>
+
+### 2. Structured Telemetry Synthesis
+Mausami-V1 processing complex weather queries into verified, zero-flicker tabular metrics (precipitation probabilities, visibility thresholds, and aviation/maritime operational impacts) combined with active IMD safety bulletins.
+
+<p align="center">
+  <img src="screenshots/WeatherGPT ss2.png" alt="Mausami-V1 Meteorological Telemetry Response" width="95%" />
+</p>
+
+### 3. Full-Duplex Multimodal Voice HUD
+Audio-reactive live interface powered by Google Gemini Live WebSocket protocols, featuring real-time spectral frequency visualization, barge-in detection, and hands-free meteorological tool execution.
+
+<p align="center">
+  <img src="screenshots/WeatherGPT ss3.png" alt="WeatherGPT Gemini Live Voice Mode HUD" width="95%" />
+</p>
+
+---
+
 ## Core Capabilities
 
 ### 1. Low-Latency Bidirectional Voice AI
@@ -134,6 +161,7 @@ WeatherGPT/
 │   ├── relay.mjs                    # Production Node.js WebSocket relay server
 │   └── relay.d.ts                   # Ambient TypeScript typings for relay server
 ├── public/                          # Static image assets, icons, and web manifest
+├── screenshots/                     # Platform UI captures, telemetry responses, and voice HUD previews
 └── src/
     ├── App.tsx                      # Root application component and routing providers
     ├── index.css                    # Design system tokens, utilities, and base resets

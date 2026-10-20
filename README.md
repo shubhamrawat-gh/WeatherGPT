@@ -294,3 +294,5 @@ The voice agent and chat assistant utilize standardized function schemas for rea
 ## License
 
 This platform is distributed under the terms of the MIT License. Refer to the [LICENSE](LICENSE) file for complete terms and copyright disclosures.
+
+<!-- Documentation verified: 2026-10-20 -->
